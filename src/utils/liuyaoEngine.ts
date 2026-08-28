@@ -890,7 +890,8 @@ export const calculateLiuYaoLayeredAnalysis = (
   // 3. 用神 (Yong Shen)
   const yongShenLines = lines.filter((l) => l.originalRelative === yongShenCategory);
   const isMissingInOriginal = yongShenLines.length === 0;
-  let primaryLineIndex = yongShenLines[0]?.index || 1;
+  const fuShenInfo = lines.find((l) => l.fushen?.relative === yongShenCategory)?.fushen;
+  let primaryLineIndex = yongShenLines[0]?.index || fuShenInfo?.lineIndex || 1;
   let selectionReason = "卦中獨現此用神爻，為定局主神。";
 
   if (yongShenLines.length > 1) {
@@ -915,11 +916,11 @@ export const calculateLiuYaoLayeredAnalysis = (
       selectionReason = `用神兩現俱靜，取旺相有氣之【${yongShenLines[0].name}】為主用神。`;
     }
   } else if (isMissingInOriginal) {
+    primaryLineIndex = fuShenInfo?.lineIndex || 1;
     selectionReason = `本卦六爻無【${yongShenCategory}】，用神伏藏，需查本宮八純卦對應之伏神。`;
   }
 
   const primaryYongLine = lines.find((l) => l.index === primaryLineIndex) || lines[0];
-  const fuShenInfo = lines.find((l) => l.fushen?.relative === yongShenCategory)?.fushen;
 
   // Power Score calculation (0 - 100)
   let powerScore = 50;
@@ -1370,7 +1371,7 @@ export const calculateLiuYaoLayeredAnalysis = (
         targetWuxing: cfg.targetWuxing,
         linesInvolved: present.join("、"),
         effect: isComplete
-          ? `三合金局圓滿，聚眾合力，大幅加強【${cfg.targetWuxing}】五行氣勢！`
+          ? `三合${cfg.targetWuxing}局圓滿，聚眾合力，大幅加強【${cfg.targetWuxing}】五行氣勢！`
           : `得【${present.join("、")}】半合${cfg.targetWuxing}局，有聚力成事之意。`,
       });
     }
