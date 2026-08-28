@@ -760,53 +760,6 @@ export const YaoEnergyChart: React.FC<YaoEnergyChartProps> = ({
         </div>
       </div>
 
-      {/* 為何有此項 & 六親易理補充說明 */}
-      <div className="rounded-xl border border-amber-200 bg-amber-50/50 p-3.5 text-xs text-stone-700 leading-relaxed space-y-2.5">
-        <div className="flex items-start justify-between gap-2">
-          <div className="flex items-center gap-1.5 font-serif font-bold text-amber-900 text-xs sm:text-sm">
-            <HelpCircle className="h-4 w-4 text-amber-700 shrink-0" />
-            <span>【為何有此量化圖譜？】古典易理力學模型解析</span>
-          </div>
-          <span className="text-[10px] text-amber-900 bg-amber-100 px-2 py-0.5 rounded border border-amber-300 font-medium whitespace-nowrap">
-            增刪卜易 · 卜筮正宗
-          </span>
-        </div>
-        
-        <p className="text-[11px] text-stone-600">
-          傳統六爻實占中，「爻之旺衰」是定奪事態吉凶成敗的最關鍵基礎。若一爻<strong>得月生卻受日剋、又發動化退神</strong>，初學常難以衡量其綜合動能。本圖譜將古典<strong>「月令提綱（司萬物旺相休囚死）」</strong>、<strong>「日辰主宰（操當日生殺暗動）」</strong>與<strong>「動變生剋（回頭生剋/化進退）」</strong>三大維度予以精確三維向量量化，助您一眼看清全盤「至旺得力之神」與「極衰受制之爻」。
-        </p>
-
-        {/* 六親含義快速指南 */}
-        <div className="border-t border-amber-200/80 pt-2.5">
-          <div className="font-semibold text-amber-900 text-[11px] mb-1.5 flex items-center gap-1">
-            <Sparkles className="h-3.5 w-3.5 text-amber-700" />
-            <span>六親（兄弟、子孫、妻財、官鬼、父母）易理象義速查：</span>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 text-[11px]">
-            <div className="rounded-lg bg-white p-2.5 border border-stone-200 shadow-2xs">
-              <span className="font-bold text-amber-900 block">【兄弟】同我者</span>
-              <p className="text-stone-600 text-[10px] mt-0.5">同僚、朋友、同行競爭、爭端。求財最忌兄動（剋妻財劫財）。</p>
-            </div>
-            <div className="rounded-lg bg-white p-2.5 border border-stone-200 shadow-2xs">
-              <span className="font-bold text-emerald-800 block">【子孫】我生者</span>
-              <p className="text-stone-600 text-[10px] mt-0.5">晚輩、子女、福神、醫藥、解憂。能生財、制官鬼散禍保平安。</p>
-            </div>
-            <div className="rounded-lg bg-white p-2.5 border border-stone-200 shadow-2xs">
-              <span className="font-bold text-amber-800 block">【妻財】我剋者</span>
-              <p className="text-stone-600 text-[10px] mt-0.5">金錢、資產、利潤、妻子、女友。求財、經商買賣之核心用神。</p>
-            </div>
-            <div className="rounded-lg bg-white p-2.5 border border-stone-200 shadow-2xs">
-              <span className="font-bold text-rose-800 block">【官鬼】剋我者</span>
-              <p className="text-stone-600 text-[10px] mt-0.5">事業官位、求職升遷、丈夫、官司。占病災時為邪祟病魔。</p>
-            </div>
-            <div className="rounded-lg bg-white p-2.5 border border-stone-200 col-span-2 sm:col-span-1 md:col-span-1 shadow-2xs">
-              <span className="font-bold text-sky-800 block">【父母】生我者</span>
-              <p className="text-stone-600 text-[10px] mt-0.5">長輩、房屋、車輛、學業、合約、文書證照。剋子孫爻、生兄弟。</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Legend & Classical Principles */}
       <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-stone-600 bg-stone-50 p-2.5 rounded-xl border border-stone-200">
         <div className="flex flex-wrap items-center gap-3">

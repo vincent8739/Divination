@@ -774,31 +774,6 @@ ${
           </div>
         </div>
 
-        {/* 納甲飛伏矩陣 易理與作用基礎知識說明卡片 */}
-        <div className="border-b border-stone-200 bg-amber-50/40 p-3.5 sm:px-6 text-xs text-stone-700 space-y-2">
-          <div className="flex items-center gap-1.5 font-serif font-bold text-amber-900 text-xs sm:text-sm">
-            <HelpCircle className="h-4 w-4 text-amber-700 shrink-0" />
-            <span>【為何有此矩陣排盤？】京房納甲法與飛伏神易學原理</span>
-          </div>
-          <p className="text-[11px] text-stone-600 leading-relaxed">
-            漢代易學巨匠<strong>京房</strong>首創將「天干、地支、五行六親、世應、六神」配入六十四卦，構成完整的時空全息矩陣。每一爻皆對應特定的事物角色與時空力場：
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-[11px] pt-1">
-            <div className="rounded-lg bg-white p-2.5 border border-amber-200/80 shadow-2xs">
-              <strong className="text-amber-900 block mb-0.5">① 世應定位（我與事之主客）</strong>
-              <span className="text-stone-600">「世爻」為求占者自體、主體根基；「應爻」為所問之事、對方、對手或客觀環境。世應相生相合主順遂。</span>
-            </div>
-            <div className="rounded-lg bg-white p-2.5 border border-amber-200/80 shadow-2xs">
-              <strong className="text-amber-900 block mb-0.5">② 飛神與伏神（隱現之機）</strong>
-              <span className="text-stone-600">本卦之爻為「飛神」；若問事之用神不在本卦，需從本宮純卦查取「伏神」。飛生伏易出，飛剋伏受制。</span>
-            </div>
-            <div className="rounded-lg bg-white p-2.5 border border-amber-200/80 shadow-2xs">
-              <strong className="text-amber-900 block mb-0.5">③ 六神輔象（情狀描摹）</strong>
-              <span className="text-stone-600">由日干起配青龍（喜慶）、朱雀（口舌文書）、勾陳（遲滯田土）、騰蛇（虛驚多怪）、白虎（剛猛血光）、玄武（暗昧隱私）。</span>
-            </div>
-          </div>
-        </div>
-
         {/* Interactive Yao Details Tip Banner */}
         <div className="flex items-center justify-between bg-gradient-to-r from-amber-100/90 via-amber-50 to-amber-100/70 px-4 sm:px-6 py-2.5 border-b border-amber-200 text-xs">
           <div className="flex items-center gap-2 text-amber-950 font-medium">

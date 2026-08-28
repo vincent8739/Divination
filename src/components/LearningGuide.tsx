@@ -58,24 +58,26 @@ export const LearningGuide: React.FC = () => {
           </div>
           <div>
             <h3 className="font-serif text-lg font-bold text-stone-900 sm:text-xl">
-              第一章：日月星辰六爻旺衰能量量化圖譜 · 易理詳解
+              第一章：【為何有此量化圖譜？】古典易理力學模型解析
             </h3>
             <p className="text-xs text-stone-600">
-              為何要將六爻旺衰進行「能量量化」？六親（兄弟、子孫、妻財、官鬼、父母）各自代表何種深層含義？
+              為何要將六爻旺衰進行「能量量化」？《增刪卜易》、《卜筮正宗》三維力學與六親深層含義解析
             </p>
           </div>
         </div>
 
         {/* 為什麼有能量圖譜？ */}
         <div className="rounded-xl border border-sky-200 bg-sky-50/40 p-5 space-y-3">
-          <h4 className="font-serif font-bold text-sky-900 text-sm flex items-center gap-1.5">
-            <Info className="h-4 w-4" /> 1. 為何需要「六爻旺衰能量量化圖譜」？
-          </h4>
+          <div className="flex items-start justify-between gap-2">
+            <h4 className="font-serif font-bold text-sky-900 text-sm flex items-center gap-1.5">
+              <HelpCircle className="h-4 w-4 text-sky-700" /> 【為何有此量化圖譜？】古典易理力學模型解析
+            </h4>
+            <span className="text-[10px] text-sky-900 bg-sky-100 px-2 py-0.5 rounded border border-sky-300 font-medium whitespace-nowrap">
+              增刪卜易 · 卜筮正宗
+            </span>
+          </div>
           <p className="text-xs text-stone-700 leading-relaxed">
-            在傳統六爻實占中，初學者最常面臨的難題是：<strong>「一爻若得月生卻受日剋，又發動化退神，此爻到底算旺還是算衰？」</strong>
-          </p>
-          <p className="text-xs text-stone-600 leading-relaxed">
-            古籍如《增刪卜易》與《卜筮正宗》將爻之旺衰力道分為<strong>「月令提綱」</strong>、<strong>「日辰主宰」</strong>與<strong>「動變回頭生剋」</strong>三大力學維度。本系統將古典古訓轉化為<strong>精確的三維向量力學模型</strong>：
+            在傳統六爻實占中，「爻之旺衰」是定奪事態吉凶成敗的最關鍵基礎。若一爻<strong>得月生卻受日剋、又發動化退神</strong>，初學常難以衡量其綜合動能。本圖譜將古典<strong>「月令提綱（司萬物旺相休囚死）」</strong>、<strong>「日辰主宰（操當日生殺暗動）」</strong>與<strong>「動變生剋（回頭生剋/化進退）」</strong>三大維度予以精確三維向量量化，助您一眼看清全盤「至旺得力之神」與「極衰受制之爻」。
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1 text-xs">
             <div className="rounded-lg bg-white p-3 border border-sky-200 shadow-2xs">
@@ -211,11 +213,36 @@ export const LearningGuide: React.FC = () => {
           </div>
           <div>
             <h3 className="font-serif text-lg font-bold text-stone-900 sm:text-xl">
-              第二章：六爻納甲飛伏排盤矩陣 · 易理詳解
+              第二章：【為何有此矩陣排盤？】京房納甲法與飛伏神易學原理
             </h3>
             <p className="text-xs text-stone-600">
-              京房納甲體系的由來是什麼？世應定位與飛伏神推算有何決定性意義？
+              漢代易學宗師京房納甲體系的由來是什麼？世應定位與飛伏神推算有何決定性意義？
             </p>
+          </div>
+        </div>
+
+        {/* 納甲矩陣核心引言 */}
+        <div className="rounded-xl border border-amber-200 bg-amber-50/50 p-4 text-xs text-stone-700 leading-relaxed space-y-2">
+          <div className="flex items-center gap-1.5 font-serif font-bold text-amber-900 text-sm">
+            <HelpCircle className="h-4 w-4 text-amber-700 shrink-0" />
+            <span>【為何有此矩陣排盤？】京房納甲法與飛伏神易學原理</span>
+          </div>
+          <p className="text-xs text-stone-600 leading-relaxed">
+            漢代易學巨匠<strong>京房</strong>首創將「天干、地支、五行六親、世應、六神」配入六十四卦，構成完整的時空全息矩陣。每一爻皆對應特定的事物角色與時空力場：
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1 text-xs">
+            <div className="rounded-lg bg-white p-3 border border-amber-200 shadow-2xs">
+              <strong className="text-amber-900 block mb-1">① 世應定位（我與事之主客）</strong>
+              <span className="text-stone-600">「世爻」為求占者自體、主體根基；「應爻」為所問之事、對方、對手或客觀環境。世應相生相合主順遂。</span>
+            </div>
+            <div className="rounded-lg bg-white p-3 border border-amber-200 shadow-2xs">
+              <strong className="text-amber-900 block mb-1">② 飛神與伏神（隱現之機）</strong>
+              <span className="text-stone-600">本卦之爻為「飛神」；若問事之用神不在本卦，需從本宮純卦查取「伏神」。飛生伏易出，飛剋伏受制。</span>
+            </div>
+            <div className="rounded-lg bg-white p-3 border border-amber-200 shadow-2xs">
+              <strong className="text-amber-900 block mb-1">③ 六神輔象（情狀描摹）</strong>
+              <span className="text-stone-600">由日干起配青龍（喜慶）、朱雀（口舌文書）、勾陳（遲滯田土）、騰蛇（虛驚多怪）、白虎（剛猛血光）、玄武（暗昧隱私）。</span>
+            </div>
           </div>
         </div>
 
