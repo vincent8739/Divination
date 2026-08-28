@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#78350f" />
+      <stop offset="100%" stop-color="#451a03" />
+    </linearGradient>
+    <radialGradient id="goldGrad" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#fef3c7" />
+      <stop offset="70%" stop-color="#fbbf24" />
+      <stop offset="100%" stop-color="#d97706" />
+    </radialGradient>
+  </defs>
+  
+  <!-- Outer circle badge -->
+  <circle cx="32" cy="32" r="30" fill="url(#bgGrad)" stroke="#d97706" stroke-width="2" />
+  <circle cx="32" cy="32" r="26" fill="none" stroke="#fef3c7" stroke-width="0.8" stroke-dasharray="2,2" opacity="0.6" />
+
+  <!-- Center Taiji / Bagua emblem -->
+  <g transform="translate(32,32) scale(0.68) translate(-32,-32)">
+    <!-- Base Yin Yang Circle -->
+    <circle cx="32" cy="32" r="24" fill="#fafaf9" stroke="#b45309" stroke-width="1.5" />
+    <!-- Dark side (Yin) -->
+    <path d="M 32 8 A 12 12 0 0 0 32 32 A 12 12 0 0 1 32 56 A 24 24 0 0 1 32 8 Z" fill="#292524" />
+    <!-- Yang Dot in Yin -->
+    <circle cx="32" cy="44" r="3.5" fill="#fafaf9" />
+    <!-- Yin Dot in Yang -->
+    <circle cx="32" cy="20" r="3.5" fill="#292524" />
+  </g>
+
+  <!-- Trigram bars (Yao marks top & bottom) -->
+  <!-- Top: Qian (Solid line) -->
+  <rect x="22" y="5" width="20" height="2" rx="1" fill="#fef3c7" opacity="0.9" />
+  
+  <!-- Bottom: Kun (Broken line) -->
+  <rect x="22" y="57" width="8" height="2" rx="1" fill="#fef3c7" opacity="0.9" />
+  <rect x="34" y="57" width="8" height="2" rx="1" fill="#fef3c7" opacity="0.9" />
+</svg>
