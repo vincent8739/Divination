@@ -192,8 +192,8 @@ export const DivinationForm: React.FC<DivinationFormProps> = ({
         </div>
 
         {/* Date Inputs */}
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
-          <div>
+        <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-5 sm:gap-3">
+          <div className="col-span-2 sm:col-span-1">
             <label className="mb-1 block text-xs text-stone-500 font-medium">年（公曆）</label>
             <div className="flex items-center rounded-lg border border-stone-300 bg-stone-50 px-2.5 py-2 focus-within:bg-white focus-within:border-amber-500">
               <input
@@ -275,46 +275,46 @@ export const DivinationForm: React.FC<DivinationFormProps> = ({
         </div>
 
         {/* Ganzhi & Metaphysics Preview Bar */}
-        <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50/60 p-3.5">
-          <div className="grid grid-cols-2 gap-3 text-xs sm:grid-cols-4 md:grid-cols-6">
+        <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50/60 p-3 sm:p-3.5">
+          <div className="grid grid-cols-2 gap-2.5 text-xs sm:grid-cols-3 md:grid-cols-6">
             <div className="flex flex-col">
-              <span className="text-stone-500">歲次年柱</span>
+              <span className="text-stone-500 text-[11px]">歲次年柱</span>
               <span className="font-serif text-sm font-bold text-stone-900">
                 {ganzhiPreview.ganzhiYear}年
               </span>
             </div>
 
             <div className="flex flex-col">
-              <span className="text-stone-500">月建月柱</span>
+              <span className="text-stone-500 text-[11px]">月建月柱</span>
               <span className="font-serif text-sm font-bold text-stone-900">
                 {ganzhiPreview.ganzhiMonth}月（建{ganzhiPreview.yueJian}）
               </span>
             </div>
 
             <div className="flex flex-col">
-              <span className="text-stone-500">日辰日柱</span>
+              <span className="text-stone-500 text-[11px]">日辰日柱</span>
               <span className="font-serif text-sm font-bold text-stone-900">
                 {ganzhiPreview.ganzhiDay}日（辰{ganzhiPreview.riChen}）
               </span>
             </div>
 
             <div className="flex flex-col">
-              <span className="text-stone-500">時辰時柱</span>
+              <span className="text-stone-500 text-[11px]">時辰時柱</span>
               <span className="font-serif text-sm font-bold text-stone-900">
                 {ganzhiPreview.ganzhiHour}時
               </span>
             </div>
 
             <div className="flex flex-col">
-              <span className="text-stone-500">日旬空亡</span>
-              <span className="font-bold text-rose-600">
+              <span className="text-stone-500 text-[11px]">日旬空亡</span>
+              <span className="font-bold text-rose-600 text-sm">
                 {ganzhiPreview.xunKong}
               </span>
             </div>
 
             <div className="flex flex-col">
-              <span className="text-stone-500">神煞吉星</span>
-              <span className="text-stone-800 font-medium">
+              <span className="text-stone-500 text-[11px]">神煞吉星</span>
+              <span className="text-stone-800 font-medium text-[11px] leading-tight">
                 貴人:{ganzhiPreview.dayGuiRen} · 驛馬:{ganzhiPreview.yiMa} · 祿:{ganzhiPreview.dayLu}
               </span>
             </div>
@@ -323,10 +323,10 @@ export const DivinationForm: React.FC<DivinationFormProps> = ({
       </div>
 
       {/* 3. Da Yan Stalk Remainders Input (6, 7, 8, 9) */}
-      <div className="rounded-2xl border border-stone-200 bg-white p-5 shadow-xs sm:p-6">
+      <div className="rounded-2xl border border-stone-200 bg-white p-4 sm:p-6 shadow-xs">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-stone-200 pb-3">
           <div className="flex items-center space-x-2">
-            <Layers className="h-5 w-5 text-amber-600" />
+            <Layers className="h-5 w-5 text-amber-600 shrink-0" />
             <div>
               <h2 className="font-serif text-base font-bold text-stone-900 sm:text-lg">
                 第三步：輸入揲蓍餘數（初爻至上爻之 6, 7, 8, 9）
@@ -348,11 +348,11 @@ export const DivinationForm: React.FC<DivinationFormProps> = ({
             return (
               <div
                 key={idx}
-                className="flex flex-wrap items-center justify-between rounded-xl border border-stone-200 bg-stone-50/70 p-3 transition hover:border-stone-300 hover:bg-stone-100/50"
+                className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between rounded-xl border border-stone-200 bg-stone-50/70 p-2.5 sm:p-3 transition hover:border-stone-300 hover:bg-stone-100/50"
               >
                 {/* Left Line Name & Symbol Preview */}
-                <div className="flex items-center space-x-3">
-                  <span className="w-20 font-serif text-sm font-semibold text-stone-800">
+                <div className="flex items-center justify-between sm:justify-start space-x-3">
+                  <span className="w-18 sm:w-20 font-serif text-sm font-semibold text-stone-800">
                     {yaoLabel}
                   </span>
                   
@@ -362,14 +362,14 @@ export const DivinationForm: React.FC<DivinationFormProps> = ({
                       {currentVal === 9 ? (
                         <>
                           <span className="text-rose-600 font-bold select-none">▅▅▅▅▅</span>
-                          <span className="absolute left-[calc(100%+8px)] text-xs text-rose-600 font-bold">◯</span>
+                          <span className="absolute left-[calc(100%+6px)] text-xs text-rose-600 font-bold">◯</span>
                         </>
                       ) : currentVal === 7 ? (
                         <span className="text-stone-900 select-none">▅▅▅▅▅</span>
                       ) : currentVal === 6 ? (
                         <>
                           <span className="text-sky-600 font-bold select-none">▅▅　▅▅</span>
-                          <span className="absolute left-[calc(100%+8px)] text-xs text-sky-600 font-bold">✕</span>
+                          <span className="absolute left-[calc(100%+6px)] text-xs text-sky-600 font-bold">✕</span>
                         </>
                       ) : (
                         <span className="text-stone-600 select-none">▅▅　▅▅</span>
@@ -379,7 +379,7 @@ export const DivinationForm: React.FC<DivinationFormProps> = ({
                 </div>
 
                 {/* Right Selector Radio Buttons for 6, 7, 8, 9 */}
-                <div className="flex flex-wrap items-center gap-2">
+                <div className="grid grid-cols-2 gap-1.5 sm:flex sm:flex-wrap sm:items-center sm:gap-2">
                   {[
                     { val: 9 as YaoRemainder, label: "9 老陽 (◯發動)", desc: "變少陰", color: "rose" },
                     { val: 7 as YaoRemainder, label: "7 少陽", desc: "靜陽", color: "amber" },
@@ -393,15 +393,15 @@ export const DivinationForm: React.FC<DivinationFormProps> = ({
                         id={`yao-${yaoNumber}-val-${btn.val}`}
                         type="button"
                         onClick={() => handleRemainderChange(idx, btn.val)}
-                        className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-all cursor-pointer ${
+                        className={`rounded-lg px-2.5 py-2 sm:px-3 sm:py-1.5 text-xs font-semibold transition-all cursor-pointer text-center ${
                           isSelected
                             ? btn.val === 9
-                              ? "border border-rose-400 bg-rose-50 text-rose-800 ring-1 ring-rose-400 shadow-2xs"
+                              ? "border border-rose-400 bg-rose-50 text-rose-800 ring-1 ring-rose-400 shadow-2xs font-bold"
                               : btn.val === 6
-                              ? "border border-sky-400 bg-sky-50 text-sky-800 ring-1 ring-sky-400 shadow-2xs"
+                              ? "border border-sky-400 bg-sky-50 text-sky-800 ring-1 ring-sky-400 shadow-2xs font-bold"
                               : btn.val === 7
-                              ? "border border-amber-500 bg-amber-50 text-amber-900 ring-1 ring-amber-400 shadow-2xs"
-                              : "border border-stone-400 bg-stone-200 text-stone-900 ring-1 ring-stone-400 shadow-2xs"
+                              ? "border border-amber-500 bg-amber-50 text-amber-900 ring-1 ring-amber-400 shadow-2xs font-bold"
+                              : "border border-stone-400 bg-stone-200 text-stone-900 ring-1 ring-stone-400 shadow-2xs font-bold"
                             : "border border-stone-200 bg-white text-stone-600 hover:border-stone-300 hover:text-stone-900"
                         }`}
                       >

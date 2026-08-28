@@ -13,10 +13,8 @@ import { toPng } from "html-to-image";
 import {
   Sparkles,
   Printer,
-  Copy,
   Check,
   Flame,
-  BookmarkPlus,
   BookOpen,
   ArrowRight,
   Zap,
@@ -33,15 +31,11 @@ import {
   FileJson,
   Image as ImageIcon,
   Loader2,
-  Share2,
 } from "lucide-react";
 
 interface HexagramBoardProps {
   result: DivinationResult;
   onYongShenChange: (newRelative: SixRelative) => void;
-  onOpenAiModal: () => void;
-  onSaveToHistory: () => void;
-  isSaved?: boolean;
 }
 
 const WUXING_COLORS: Record<Wuxing, { bg: string; text: string; border: string }> = {
@@ -72,11 +66,7 @@ const WANG_XIANG_BADGES: Record<WangXiangLevel, { label: string; style: string }
 export const HexagramBoard: React.FC<HexagramBoardProps> = ({
   result,
   onYongShenChange,
-  onOpenAiModal,
-  onSaveToHistory,
-  isSaved = false,
 }) => {
-  const [copied, setCopied] = useState(false);
   const [selectedLineIndex, setSelectedLineIndex] = useState<number | null>(null);
   const [isYaoDetailModalOpen, setIsYaoDetailModalOpen] = useState(false);
   const [activeYaoDetailIndex, setActiveYaoDetailIndex] = useState<number>(1);
@@ -186,63 +176,6 @@ export const HexagramBoard: React.FC<HexagramBoardProps> = ({
     }
   };
 
-  // Copy formatted text paipan to clipboard
-  const handleCopyText = () => {
-    const linesText = result.lines
-      .slice()
-      .reverse()
-      .map((line) => {
-        const fushenStr = line.fushen?.isMissingInOriginal
-          ? `[伏:${line.fushen.relative}${line.fushen.branch}${line.fushen.wuxing}(${line.fushen.relationWithFeishen})] `
-          : "                   ";
-        const shiYingStr = line.isShi ? "【世】" : line.isYing ? "【應】" : "      ";
-        const movingStr = line.remainder === 9 ? "◯" : line.remainder === 6 ? "✕" : "  ";
-        const wangPoStr = `[${line.wangXiang}${line.isMonthPo ? " 月破" : ""}${line.dayChongType ? " " + line.dayChongType : ""}]`;
-        const changedStr = result.changedHexagram
-          ? ` -> 之卦:${line.changedSymbolStr} ${line.changedRelative || ""}${line.changedBranch || ""}${line.changedWuxing || ""}${line.isChangedShi ? "【之世】" : line.isChangedYing ? "【之應】" : ""} ${line.isMoving ? `(${line.changeDynamics || ""})` : "[靜]"}`
-          : "";
-        return `${line.sixSpirit} ${fushenStr} ${line.originalRelative} ${line.originalStem}${line.originalBranch}${line.originalWuxing} ${line.symbolStr} ${movingStr} ${shiYingStr} ${wangPoStr}${changedStr}`;
-      })
-      .join("\n");
-
-    const movingLinesSummary = result.lines
-      .filter((l) => l.isMoving && l.dongBianDetail)
-      .map((l) => `第${l.index}爻（${l.name}）：${l.dongBianDetail?.title} - ${l.dongBianDetail?.summary}【${l.dongBianDetail?.auspiciousness}】\n  斷語：${l.dongBianDetail?.detail}`)
-      .join("\n");
-
-    const text = `【六爻大衍筮法排盤】
-求占者：${result.querent}
-占問事由：${result.question}
-起卦時間：${result.dateTimeStr}（${result.solarTermStr}）
-四柱干支：${result.ganzhiYear}年 ${result.ganzhiMonth}月 ${result.ganzhiDay}日 ${result.ganzhiHour}時
-綱領主宰：月建【${result.yueJian}】${result.yueJianWuxing} · 日辰【${result.riChen}】${result.riChenWuxing} · 旬空【${result.xunKong}】
-本卦：${result.originalHexagram.name}（${result.originalHexagram.palace}宮${result.originalHexagram.palaceWuxing} · ${result.originalHexagram.palaceTypeName} · 世${result.originalHexagram.shiYao} 應${result.originalHexagram.yingYao}）${result.sixHeSixChong ? ` [${result.sixHeSixChong}]` : ""}
-變卦：${result.changedHexagram ? `${result.changedHexagram.name}（${result.changedHexagram.palace}宮${result.changedHexagram.palaceWuxing} · ${result.changedHexagram.palaceTypeName} · 世${result.changedHexagram.shiYao} 應${result.changedHexagram.yingYao}）${result.changedSixHeSixChong ? ` [${result.changedSixHeSixChong}]` : ""}` : "無（六爻皆靜）"}
-用神：${result.yongShenCategory}
-神煞：貴人[${result.dayGuiRen}] 驛馬[${result.yiMa}] 祿[${result.dayLu}] 桃花[${result.taoHua}]
-
------------------ 六爻納甲矩陣 -----------------
-六神    伏神推算            本卦納甲       爻象  世應  月旺日沖   變卦之卦
-${linesText}
-------------------------------------------------
-【動變生剋詳析（回頭生/剋、化進/退）】
-${movingLinesSummary || "六爻皆靜，無動變生剋，專看本卦世應用神月旺日辰。"}
-
-【伏神總評】
-${
-  result.missingRelatives.length > 0
-    ? `本卦缺【${result.missingRelatives.join("、")}】，伏於本宮首卦《${
-        result.lines[0]?.fushen?.pureHexagramName
-      }》之下。`
-    : "本卦五行六親俱全，無缺失伏神。"
-}
-`;
-
-    navigator.clipboard.writeText(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
   const handlePrint = () => {
     window.print();
   };
@@ -273,15 +206,6 @@ ${
 
           {/* Action Buttons */}
           <div className="flex flex-wrap items-center gap-2">
-            <button
-              id="btn-ai-deep-interpret"
-              onClick={onOpenAiModal}
-              className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-amber-600 to-amber-500 px-4 py-2 text-xs font-bold text-white shadow-xs transition hover:brightness-105 active:scale-95 sm:text-sm cursor-pointer"
-            >
-              <Sparkles className="h-4 w-4" />
-              <span>易道AI深研解卦</span>
-            </button>
-
             {/* Export & Backup Dropdown Menu */}
             <div ref={exportDropdownRef} className="relative">
               <button
@@ -347,44 +271,12 @@ ${
             </div>
 
             <button
-              id="btn-save-history"
-              onClick={onSaveToHistory}
-              disabled={isSaved}
-              className={`flex items-center gap-1 rounded-lg border px-3 py-2 text-xs font-semibold transition cursor-pointer ${
-                isSaved
-                  ? "border-emerald-300 bg-emerald-50 text-emerald-800"
-                  : "border-stone-200 bg-stone-50 text-stone-700 hover:bg-stone-100 hover:text-stone-900"
-              }`}
-            >
-              <BookmarkPlus className="h-4 w-4" />
-              <span>{isSaved ? "已儲存" : "儲存卦例"}</span>
-            </button>
-
-            <button
-              id="btn-copy-paipan"
-              onClick={handleCopyText}
-              className="flex items-center gap-1 rounded-lg border border-stone-200 bg-stone-50 px-3 py-2 text-xs font-medium text-stone-700 transition hover:bg-stone-100 hover:text-stone-900 cursor-pointer"
-            >
-              {copied ? (
-                <>
-                  <Check className="h-4 w-4 text-emerald-600" />
-                  <span className="text-emerald-600 font-semibold">已複製</span>
-                </>
-              ) : (
-                <>
-                  <Copy className="h-4 w-4" />
-                  <span>複製排盤</span>
-                </>
-              )}
-            </button>
-
-            <button
               id="btn-print-paipan"
               onClick={handlePrint}
-              className="hidden items-center gap-1 rounded-lg border border-stone-200 bg-stone-50 px-3 py-2 text-xs font-medium text-stone-700 transition hover:bg-stone-100 hover:text-stone-900 sm:flex cursor-pointer"
+              className="flex items-center gap-1 rounded-lg border border-stone-200 bg-stone-50 px-3 py-2 text-xs font-medium text-stone-700 transition hover:bg-stone-100 hover:text-stone-900 cursor-pointer"
             >
               <Printer className="h-4 w-4" />
-              <span>列印</span>
+              <span>列印排盤</span>
             </button>
           </div>
         </div>
