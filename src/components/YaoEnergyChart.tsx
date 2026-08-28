@@ -95,8 +95,8 @@ export const YaoEnergyChart: React.FC<YaoEnergyChartProps> = ({
       let dayReason = "";
 
       if (line.originalBranch === result.riChen) {
-        dayScore = 90;
-        dayReason = `臨日辰【${result.riChen}】，得日主同行相扶，威力無窮 (+90)`;
+        dayScore = 100;
+        dayReason = `臨日辰【${result.riChen}】，值日建司令專權，威權最盛 (+100)`;
       } else if (line.dayChongType === "暗動") {
         dayScore = 75;
         dayReason = `得月旺又受日辰沖動，化為【暗動】，有如神兵暗助 (+75)`;
@@ -108,9 +108,13 @@ export const YaoEnergyChart: React.FC<YaoEnergyChartProps> = ({
         dayReason = `爻逢旬空遇日辰沖之，為【沖空填實】，空而不空 (+40)`;
       } else {
         switch (line.dayRelation) {
+          case "臨日辰":
+            dayScore = 100;
+            dayReason = `臨日辰值日司令專權 (+100)`;
+            break;
           case "日建同旺":
-            dayScore = 90;
-            dayReason = `日辰同行同旺 (+90)`;
+            dayScore = 75;
+            dayReason = `與日辰五行比和同旺 (+75)`;
             break;
           case "得日辰生":
             dayScore = 60;

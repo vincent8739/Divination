@@ -12,6 +12,21 @@ import {
   DivinationResult,
   WangXiangLevel,
   DongBianDetail,
+  LiuYaoLayeredAnalysis,
+  Layer1ShiAnalysis,
+  Layer2YingAnalysis,
+  Layer3YongShenAnalysis,
+  Layer4YuanShenAnalysis,
+  Layer5JiShenAnalysis,
+  Layer6FuShenAnalysis,
+  Layer7FeiShenAnalysis,
+  Layer8YueJianAnalysis,
+  Layer9RiChenAnalysis,
+  Layer10DongYaoAnalysis,
+  Layer11BianYaoAnalysis,
+  Layer12HeChongXingHaiAnalysis,
+  Layer13XunKongAnalysis,
+  Layer14YingQiAnalysis,
 } from "../types/liuyao";
 import { findHexagramByBinary, getPureHexagramOfPalace, HEXAGRAMS_DATA, TRIGRAMS } from "../data/hexagrams";
 import { BRANCH_WUXING, GanzhiResult } from "./calendar";
@@ -148,6 +163,15 @@ export const getHexagramLinesNaJia = (
   return { stems, branches, wuxings, relatives };
 };
 
+// Standard Yao Line Name helper (初九, 初六, 九二, 六二, 九三, 六三, 九四, 六四, 九五, 六五, 上九, 上六)
+export const getYaoLineName = (lineIndex: number, yinYang: 0 | 1): string => {
+  const typeChar = yinYang === 1 ? "九" : "六";
+  if (lineIndex === 1) return `初${typeChar}`;
+  if (lineIndex === 6) return `上${typeChar}`;
+  const posNames = ["", "初", "二", "三", "四", "五", "上"];
+  return `${typeChar}${posNames[lineIndex]}`;
+};
+
 // Earthly Branch Clashes (地支六沖)
 export const BRANCH_CHONG: Record<EarthlyBranch, EarthlyBranch> = {
   子: "午",
@@ -262,12 +286,15 @@ export const calculateDayRelationAndChong = (
   let dayRelation: YaoLineDetail["dayRelation"] = "日平";
   let dayRelationDesc = "與日辰無特殊生剋，平穩隨常。";
 
-  if (BRANCH_HE[riChen] === branch) {
+  if (branch === riChen) {
+    dayRelation = "臨日辰";
+    dayRelationDesc = `地支與日辰【${riChen}】相同，臨日辰值日，專權當令，身強氣足最為有力。`;
+  } else if (BRANCH_HE[riChen] === branch) {
     dayRelation = "日辰六合";
     dayRelationDesc = `與日辰【${riChen}】六合，得日辰牽絆成全，吉事添喜、凶事牽連不易解。`;
   } else if (branchWuxing === riWuxing) {
     dayRelation = "日建同旺";
-    dayRelationDesc = `與日辰【${riChen}】${riWuxing}同氣，當日得令，身強氣足。`;
+    dayRelationDesc = `與日辰【${riChen}】${riWuxing}五行同氣（比和），得日辰同旺生氣相助。`;
   } else if (WUXING_RELATIONS[riWuxing].generates === branchWuxing) {
     dayRelation = "得日辰生";
     dayRelationDesc = `得日辰【${riChen}】${riWuxing}相生，得外力、貴人提攜相助。`;
@@ -291,7 +318,7 @@ export const calculateDayRelationAndChong = (
     } else if (isXunKong) {
       dayChongType = "沖空";
       dayChongDesc = `旬空之爻逢日辰【${riChen}】相沖為「沖空」，沖空則實，動而有用，不再受空亡牽制。`;
-    } else if (wangXiang === "旺" || wangXiang === "相" || dayRelation === "日建同旺" || dayRelation === "得日辰生") {
+    } else if (wangXiang === "旺" || wangXiang === "相" || dayRelation === "臨日辰" || dayRelation === "日建同旺" || dayRelation === "得日辰生") {
       dayChongType = "暗動";
       dayChongDesc = `旺相靜爻逢日辰【${riChen}】相沖為「暗動」，如伏兵暴起，暗中策動發力，福凶力量倍增且難以察覺。`;
     } else {
@@ -632,6 +659,901 @@ export const checkHexagramCategory = (hex: HexagramData): string => {
   return "";
 };
 
+// Analyze Fushen (Hidden Spirit) status and emerged reason according to classical Wen Wang Gua
+export const analyzeFushenStatus = (
+  pureBranch: EarthlyBranch,
+  pureWuxing: Wuxing,
+  origBranch: EarthlyBranch,
+  origWuxing: Wuxing,
+  relationWithFeishen: FushenInfo["relationWithFeishen"],
+  ganzhi: GanzhiResult
+): { isEmerged: boolean; emergedReason: string } => {
+  const yueWuxing = ganzhi.yueJianWuxing;
+  const riWuxing = ganzhi.riChenWuxing;
+  const yueJian = ganzhi.yueJian;
+  const riChen = ganzhi.riChen;
+
+  // Month relationship with Fushen
+  const isLinYue = pureBranch === yueJian;
+  const isYueSheng = WUXING_RELATIONS[yueWuxing].generates === pureWuxing;
+  const isYueBi = pureWuxing === yueWuxing;
+  const isYueKe = WUXING_RELATIONS[yueWuxing].restricts === pureWuxing;
+  const isYueXie = WUXING_RELATIONS[pureWuxing].generates === yueWuxing;
+  const isYueHao = WUXING_RELATIONS[pureWuxing].restricts === yueWuxing;
+
+  // Day relationship with Fushen
+  const isLinRi = pureBranch === riChen;
+  const isRiSheng = WUXING_RELATIONS[riWuxing].generates === pureWuxing;
+  const isRiBi = pureWuxing === riWuxing;
+  const isRiKe = WUXING_RELATIONS[riWuxing].restricts === pureWuxing;
+  const isRiXie = WUXING_RELATIONS[pureWuxing].generates === riWuxing;
+  const isRiHao = WUXING_RELATIONS[pureWuxing].restricts === riWuxing;
+
+  // Feishen conditions
+  const feishenClashed = BRANCH_CHONG[riChen] === origBranch || BRANCH_CHONG[yueJian] === origBranch;
+  const feishenKong = ganzhi.xunKong.includes(origBranch);
+
+  const monthHelp = isLinYue ? `臨月建【${yueJian}】` : isYueSheng ? `得月建【${yueJian}】生` : isYueBi ? `得月建【${yueJian}】比旺` : "";
+  const dayHelp = isLinRi ? `臨日辰【${riChen}】值日` : isRiSheng ? `得日辰【${riChen}】生` : isRiBi ? `得日辰【${riChen}】比旺` : "";
+
+  const monthHurt = isYueKe ? `受月建【${yueJian}】剋` : isYueXie ? `洩氣於月建` : isYueHao ? `剋月建受耗` : "";
+  const dayHurt = isRiKe ? `受日辰【${riChen}】剋` : isRiXie ? `洩氣於日辰【${riChen}】` : isRiHao ? `剋日辰受耗` : "";
+
+  // 1. 飛生伏 (飛神生伏神，名為長生得助)
+  if (relationWithFeishen === "飛生伏") {
+    let reason = "得飛神相生（長生得助）";
+    if (monthHelp && dayHelp) reason += `，兼${monthHelp}、${dayHelp}，伏而極盛易透出`;
+    else if (monthHelp) reason += `，兼${monthHelp}，易透出有用`;
+    else if (dayHelp) reason += `，兼${dayHelp}，易透出有用`;
+    else if (dayHurt) reason += `（雖${dayHurt}），易透出有用`;
+    else reason += "，易透出有用";
+    return { isEmerged: true, emergedReason: reason };
+  }
+
+  // 2. 伏剋飛 (伏神剋飛神，名為出暴)
+  if (relationWithFeishen === "伏剋飛") {
+    let reason = "伏剋飛神為出暴（有破土之勢）";
+    if (monthHelp && dayHelp) reason += `，且${monthHelp}、${dayHelp}，氣勢強旺`;
+    else if (monthHelp) reason += `，且${monthHelp}`;
+    else if (dayHelp) reason += `，且${dayHelp}`;
+    return { isEmerged: true, emergedReason: reason };
+  }
+
+  // 3. 飛神逢空或逢沖
+  if (feishenKong) {
+    let reason = "飛神逢旬空，遮擋已除，伏神得出";
+    if (monthHelp) reason += `，兼${monthHelp}`;
+    if (dayHelp) reason += `，兼${dayHelp}`;
+    return { isEmerged: true, emergedReason: reason };
+  }
+
+  if (feishenClashed) {
+    let reason = "飛神逢日月沖動，遮障破散，伏神乘機透出";
+    if (monthHelp) reason += `，兼${monthHelp}`;
+    if (dayHelp) reason += `，兼${dayHelp}`;
+    return { isEmerged: true, emergedReason: reason };
+  }
+
+  // 4. 日月旺相生扶情況
+  if (monthHelp && dayHelp) {
+    return { isEmerged: true, emergedReason: `${monthHelp}且${dayHelp}，日月雙得生扶，伏而有力` };
+  }
+
+  if (monthHelp && !dayHelp) {
+    let reason = `${monthHelp}扶助`;
+    if (dayHurt) reason += `（雖${dayHurt}）`;
+    reason += "，得天時之氣伏而有力";
+    return { isEmerged: true, emergedReason: reason };
+  }
+
+  if (!monthHelp && dayHelp) {
+    let reason = `${dayHelp}扶助`;
+    if (monthHurt) reason += `（雖${monthHurt}）`;
+    reason += "，得地利日辰值令透出";
+    return { isEmerged: true, emergedReason: reason };
+  }
+
+  // 5. 飛剋伏 (受飛神壓迫且無日月生扶)
+  if (relationWithFeishen === "飛剋伏") {
+    return {
+      isEmerged: false,
+      emergedReason: "受飛神剋制壓迫，且無日月生扶，伏藏難出",
+    };
+  }
+
+  // 6. 其他無力情況
+  return {
+    isEmerged: false,
+    emergedReason: "伏藏受制或休囚無力，須待逢沖、值日或出月方得出",
+  };
+};
+
+// Relative generation and restriction helper mappings
+export const RELATIVE_GENERATOR: Record<SixRelative, SixRelative> = {
+  妻財: "子孫", // 子孫生妻財
+  官鬼: "妻財", // 妻財生官鬼
+  父母: "官鬼", // 官鬼生父母
+  子孫: "兄弟", // 兄弟生子孫
+  兄弟: "父母", // 父母生兄弟
+};
+
+export const RELATIVE_RESTRICTOR: Record<SixRelative, SixRelative> = {
+  妻財: "兄弟", // 兄弟剋妻財
+  官鬼: "子孫", // 子孫剋官鬼
+  父母: "妻財", // 妻財剋父母
+  子孫: "父母", // 父母剋子孫
+  兄弟: "官鬼", // 官鬼剋兄弟
+};
+
+export const CHOU_SHEN_MAP: Record<SixRelative, SixRelative> = {
+  妻財: "父母", // 生兄弟剋子孫
+  官鬼: "兄弟", // 生子孫剋妻財
+  父母: "子孫", // 生妻財剋官鬼
+  子孫: "官鬼", // 生父母剋兄弟
+  兄弟: "妻財", // 生官鬼剋父母
+};
+
+export const getXunNameFromBranches = (xunKongBranches: string): string => {
+  if (xunKongBranches.includes("戌") && xunKongBranches.includes("亥")) return "甲子旬（戌亥空）";
+  if (xunKongBranches.includes("申") && xunKongBranches.includes("酉")) return "甲戌旬（申酉空）";
+  if (xunKongBranches.includes("午") && xunKongBranches.includes("未")) return "甲申旬（午未空）";
+  if (xunKongBranches.includes("辰") && xunKongBranches.includes("巳")) return "甲午旬（辰巳空）";
+  if (xunKongBranches.includes("寅") && xunKongBranches.includes("卯")) return "甲辰旬（寅卯空）";
+  if (xunKongBranches.includes("子") && xunKongBranches.includes("丑")) return "甲寅旬（子丑空）";
+  return `${xunKongBranches}空亡`;
+};
+
+// Calculate all 14 classical Liu Yao layers in exact sequence
+export const calculateLiuYaoLayeredAnalysis = (
+  lines: YaoLineDetail[],
+  ganzhi: GanzhiResult,
+  originalHexagram: HexagramData,
+  changedHexagram: HexagramData | undefined,
+  yongShenCategory: SixRelative,
+  missingRelatives: SixRelative[]
+): LiuYaoLayeredAnalysis => {
+  // 1. 世爻 (Shi Yao)
+  const shiLine = lines.find((l) => l.isShi) || lines[originalHexagram.shiYao - 1] || lines[0];
+  const shiEval =
+    shiLine.isMonthPo
+      ? "世爻逢月破，自身根基受損，行事多受阻，宜防暗耗或謀事難定。"
+      : shiLine.isXunKong
+      ? "世爻落旬空，自身心無定見、猶豫不決，或隱忍避禍，出空方能全力施為。"
+      : shiLine.wangXiang === "旺" || shiLine.wangXiang === "相"
+      ? "世爻得月令生旺，自身底氣充沛、心態堅定、身強能任大事。"
+      : "世爻休囚無力，自身力量較為單薄，宜依託外力或順勢而為。";
+
+  const layer1Shi: Layer1ShiAnalysis = {
+    lineIndex: shiLine.index,
+    name: `${shiLine.name}【世爻】`,
+    relative: shiLine.originalRelative,
+    stem: shiLine.originalStem,
+    branch: shiLine.originalBranch,
+    wuxing: shiLine.originalWuxing,
+    sixSpirit: shiLine.sixSpirit,
+    wangXiang: shiLine.wangXiang,
+    dayRelation: shiLine.dayRelationDescription,
+    isMoving: shiLine.isMoving,
+    isMonthPo: shiLine.isMonthPo,
+    isDayChong: shiLine.isDayChong,
+    isXunKong: shiLine.isXunKong,
+    dongBianSummary: shiLine.dongBianDetail?.summary,
+    meaning: `世爻居第${shiLine.index}爻，代表求問者自身、本體地位、心態動向與吉凶承受之主體。持【${shiLine.originalRelative}】臨【${shiLine.sixSpirit}】。`,
+    classicalQuote: "《黃金策》曰：「世為己，應為人；世位強旺，我身有力；世爻受制，動輒得咎。」",
+    evaluation: shiEval,
+  };
+
+  // 2. 應爻 (Ying Yao)
+  const yingLine = lines.find((l) => l.isYing) || lines[originalHexagram.yingYao - 1] || lines[3];
+  let relationWithShi: Layer2YingAnalysis["relationWithShi"] = "世應比和";
+  let relationWithShiDesc = "";
+
+  if (BRANCH_HE[shiLine.originalBranch] === yingLine.originalBranch) {
+    relationWithShi = "世應相合";
+    relationWithShiDesc = `世爻【${shiLine.originalBranch}】與應爻【${yingLine.originalBranch}】地支六合。主雙方同心合意、百事和睦相生、謀事易成。`;
+  } else if (BRANCH_CHONG[shiLine.originalBranch] === yingLine.originalBranch) {
+    relationWithShi = "世應相沖";
+    relationWithShiDesc = `世爻【${shiLine.originalBranch}】與應爻【${yingLine.originalBranch}】地支相沖。主彼此相悖、同床異夢、各懷心思或易生爭執對立。`;
+  } else if (WUXING_RELATIONS[yingLine.originalWuxing].generates === shiLine.originalWuxing) {
+    relationWithShi = "應生世";
+    relationWithShiDesc = `應爻【${yingLine.originalBranch}${yingLine.originalWuxing}】生世爻【${shiLine.originalBranch}${shiLine.originalWuxing}】。大吉之象，彼方對我有利、貴人樂意相助、事來就我。`;
+  } else if (WUXING_RELATIONS[yingLine.originalWuxing].restricts === shiLine.originalWuxing) {
+    relationWithShi = "應剋世";
+    relationWithShiDesc = `應爻【${yingLine.originalBranch}${yingLine.originalWuxing}】剋世爻【${shiLine.originalBranch}${shiLine.originalWuxing}】。彼強我弱、對方施加壓力或對我有防範排擠，行事宜慎。`;
+  } else if (WUXING_RELATIONS[shiLine.originalWuxing].generates === yingLine.originalWuxing) {
+    relationWithShi = "世生應";
+    relationWithShiDesc = `世爻【${shiLine.originalBranch}${shiLine.originalWuxing}】生應爻【${yingLine.originalBranch}${yingLine.originalWuxing}】。我方付出較多、主動求人討好，多勞少獲。`;
+  } else if (WUXING_RELATIONS[shiLine.originalWuxing].restricts === yingLine.originalWuxing) {
+    relationWithShi = "世剋應";
+    relationWithShiDesc = `世爻【${shiLine.originalBranch}${shiLine.originalWuxing}】剋應爻【${yingLine.originalBranch}${yingLine.originalWuxing}】。我方佔據主導，需付出魄力征服掌控，事在人為。`;
+  } else {
+    relationWithShi = "世應比和";
+    relationWithShiDesc = `世應五行同氣（${shiLine.originalWuxing}），平起平坐、平等共處。`;
+  }
+
+  const layer2Ying: Layer2YingAnalysis = {
+    lineIndex: yingLine.index,
+    name: `${yingLine.name}【應爻】`,
+    relative: yingLine.originalRelative,
+    stem: yingLine.originalStem,
+    branch: yingLine.originalBranch,
+    wuxing: yingLine.originalWuxing,
+    sixSpirit: yingLine.sixSpirit,
+    wangXiang: yingLine.wangXiang,
+    relationWithShi,
+    relationWithShiDesc,
+    meaning: `應爻居第${yingLine.index}爻，代表問事之對象、對手、他人、所往之地或所處外部環境。持【${yingLine.originalRelative}】臨【${yingLine.sixSpirit}】。`,
+    classicalQuote: "《卜筮正宗》曰：「應為百事之基，應生世吉、應剋世凶；世應相合必有歡情，世應相沖終生齟齬。」",
+    evaluation: relationWithShiDesc,
+  };
+
+  // 3. 用神 (Yong Shen)
+  const yongShenLines = lines.filter((l) => l.originalRelative === yongShenCategory);
+  const isMissingInOriginal = yongShenLines.length === 0;
+  let primaryLineIndex = yongShenLines[0]?.index || 1;
+  let selectionReason = "卦中獨現此用神爻，為定局主神。";
+
+  if (yongShenLines.length > 1) {
+    // Selection precedence: Moving > Shi > Holds Day/Month > Wang
+    const movingYong = yongShenLines.find((l) => l.isMoving);
+    const shiYong = yongShenLines.find((l) => l.isShi);
+    const dayMonthYong = yongShenLines.find(
+      (l) => l.originalBranch === ganzhi.riChen || l.originalBranch === ganzhi.yueJian
+    );
+
+    if (movingYong) {
+      primaryLineIndex = movingYong.index;
+      selectionReason = `用神多現（${yongShenLines.map((l) => l.name).join("、")}），取發動之【${movingYong.name}】為主用神（神兆機於動）。`;
+    } else if (shiYong) {
+      primaryLineIndex = shiYong.index;
+      selectionReason = `用神多現，取臨世之【${shiYong.name}】為主用神（用神持世，切身最緊）。`;
+    } else if (dayMonthYong) {
+      primaryLineIndex = dayMonthYong.index;
+      selectionReason = `用神多現，取臨日月建之【${dayMonthYong.name}】為主用神（得令秉權）。`;
+    } else {
+      primaryLineIndex = yongShenLines[0].index;
+      selectionReason = `用神兩現俱靜，取旺相有氣之【${yongShenLines[0].name}】為主用神。`;
+    }
+  } else if (isMissingInOriginal) {
+    selectionReason = `本卦六爻無【${yongShenCategory}】，用神伏藏，需查本宮八純卦對應之伏神。`;
+  }
+
+  const primaryYongLine = lines.find((l) => l.index === primaryLineIndex) || lines[0];
+  const fuShenInfo = lines.find((l) => l.fushen?.relative === yongShenCategory)?.fushen;
+
+  // Power Score calculation (0 - 100)
+  let powerScore = 50;
+  if (!isMissingInOriginal) {
+    if (primaryYongLine.wangXiang === "旺") powerScore += 25;
+    else if (primaryYongLine.wangXiang === "相") powerScore += 18;
+    else if (primaryYongLine.wangXiang === "休") powerScore -= 5;
+    else if (primaryYongLine.wangXiang === "囚") powerScore -= 15;
+    else if (primaryYongLine.wangXiang === "死") powerScore -= 25;
+
+    if (primaryYongLine.dayRelation === "臨日辰") powerScore += 20;
+    else if (primaryYongLine.dayRelation === "得日辰生") powerScore += 15;
+    else if (primaryYongLine.dayRelation === "日建同旺") powerScore += 12;
+    else if (primaryYongLine.dayRelation === "日辰六合") powerScore += 10;
+    else if (primaryYongLine.dayRelation === "受日辰剋") powerScore -= 20;
+
+    if (primaryYongLine.isMonthPo) powerScore -= 30;
+    if (primaryYongLine.isXunKong) powerScore -= 15;
+    if (primaryYongLine.isMoving) {
+      if (primaryYongLine.dongBianDetail?.auspiciousness === "大吉") powerScore += 20;
+      else if (primaryYongLine.dongBianDetail?.auspiciousness === "吉") powerScore += 10;
+      else if (primaryYongLine.dongBianDetail?.auspiciousness === "凶") powerScore -= 20;
+      else if (primaryYongLine.dongBianDetail?.auspiciousness === "大凶") powerScore -= 35;
+    }
+  } else if (fuShenInfo) {
+    powerScore = fuShenInfo.isEmerged ? 45 : 25;
+  }
+  powerScore = Math.max(5, Math.min(98, powerScore));
+
+  const layer3YongShen: Layer3YongShenAnalysis = {
+    category: yongShenCategory,
+    lineIndices: yongShenLines.map((l) => l.index),
+    primaryLineIndex,
+    isMissingInOriginal,
+    fuShenInfo,
+    stem: isMissingInOriginal ? fuShenInfo?.stem : primaryYongLine.originalStem,
+    branch: isMissingInOriginal ? fuShenInfo?.branch : primaryYongLine.originalBranch,
+    wuxing: isMissingInOriginal ? fuShenInfo?.wuxing : primaryYongLine.originalWuxing,
+    sixSpirit: isMissingInOriginal ? undefined : primaryYongLine.sixSpirit,
+    wangXiang: isMissingInOriginal ? undefined : primaryYongLine.wangXiang,
+    dayRelation: isMissingInOriginal ? undefined : primaryYongLine.dayRelationDescription,
+    isMoving: isMissingInOriginal ? false : primaryYongLine.isMoving,
+    isMonthPo: isMissingInOriginal ? false : primaryYongLine.isMonthPo,
+    isDayChong: isMissingInOriginal ? false : primaryYongLine.isDayChong,
+    isXunKong: isMissingInOriginal ? false : primaryYongLine.isXunKong,
+    powerScore,
+    statusDescription: isMissingInOriginal
+      ? `用神【${yongShenCategory}】不上卦，伏於第${fuShenInfo?.lineIndex || 1}爻【${fuShenInfo?.branch}${fuShenInfo?.wuxing}】，${fuShenInfo?.emergedReason}。`
+      : `用神【${yongShenCategory}】臨第${primaryYongLine.index}爻【${primaryYongLine.originalBranch}${primaryYongLine.originalWuxing}】，月令【${primaryYongLine.wangXiang}】，${primaryYongLine.dayRelationDescription}。`,
+    classicalQuote: "《增刪卜易》曰：「用神為一卦之綱領，吉凶皆由此定。用神旺相，諸事大吉；用神休囚死絕空破，萬謀皆空。」",
+    selectionReason,
+    summary:
+      powerScore >= 70
+        ? `用神強旺有力（能量指標 ${powerScore}%），得天時地利，所謀易就。`
+        : powerScore >= 45
+        ? `用神力量中平（能量指標 ${powerScore}%），吉凶相伴，須看原神生扶或逢時發力。`
+        : `用神休囚受損（能量指標 ${powerScore}%），阻礙重重，宜靜守避險。`,
+  };
+
+  // 4. 原神 (Yuan Shen)
+  const yuanShenCategory = RELATIVE_GENERATOR[yongShenCategory];
+  const yuanShenLines = lines.filter((l) => l.originalRelative === yuanShenCategory);
+  const movingYuanLines = yuanShenLines.filter((l) => l.isMoving);
+
+  let yuanShenStatus: Layer4YuanShenAnalysis["status"] = "休囚無力";
+  let yuanShenSummary = "";
+
+  if (yuanShenLines.length === 0) {
+    yuanShenStatus = "伏藏不現";
+    yuanShenSummary = `卦中無【${yuanShenCategory}】（原神不現），用神無生助之源，全賴日月生扶。`;
+  } else if (movingYuanLines.some((l) => l.dongBianDetail?.auspiciousness === "大吉" || l.dongBianDetail?.type === "回頭生" || l.dongBianDetail?.type === "化進神")) {
+    yuanShenStatus = "旺相發動生用";
+    yuanShenSummary = `原神【${yuanShenCategory}】發動化吉生助用神，如源泉湧動、貴人提攜，大吉之象！`;
+  } else if (movingYuanLines.some((l) => l.dongBianDetail?.type === "回頭剋" || l.dongBianDetail?.type === "化退神" || l.dongBianDetail?.type === "化絕")) {
+    yuanShenStatus = "動化退剋";
+    yuanShenSummary = `原神【${yuanShenCategory}】發動卻化回頭剋或化退神，生助用神之力虎頭蛇尾、後援斷絕。`;
+  } else if (yuanShenLines.some((l) => l.isMonthPo || (l.isXunKong && l.wangXiang === "死"))) {
+    yuanShenStatus = "受制逢破";
+    yuanShenSummary = `原神【${yuanShenCategory}】逢月破或真空受制，無力生助用神。`;
+  } else if (yuanShenLines.some((l) => l.wangXiang === "旺" || l.wangXiang === "相")) {
+    yuanShenStatus = "旺相安靜";
+    yuanShenSummary = `原神【${yuanShenCategory}】旺相安靜，暗蓄生氣，隨時可助用神一臂之力。`;
+  } else {
+    yuanShenStatus = "休囚無力";
+    yuanShenSummary = `原神【${yuanShenCategory}】休囚無氣，生助用神之力微弱。`;
+  }
+
+  const layer4YuanShen: Layer4YuanShenAnalysis = {
+    category: yuanShenCategory,
+    wuxing: yuanShenLines[0]?.originalWuxing || "木",
+    existInOriginal: yuanShenLines.length > 0,
+    lineIndices: yuanShenLines.map((l) => l.index),
+    movingIndices: movingYuanLines.map((l) => l.index),
+    details: yuanShenLines.map((l) => ({
+      lineIndex: l.index,
+      name: l.name,
+      branch: l.originalBranch,
+      wuxing: l.originalWuxing,
+      sixSpirit: l.sixSpirit,
+      wangXiang: l.wangXiang,
+      isMoving: l.isMoving,
+      isMonthPo: l.isMonthPo,
+      isXunKong: l.isXunKong,
+      effectDesc: l.isMoving
+        ? `動爻發動，${l.dongBianDetail?.summary || "發動生用"}`
+        : `靜爻，${l.wangXiangDescription}`,
+    })),
+    status: yuanShenStatus,
+    classicalQuote: "《卜筮正宗·原神章》曰：「原神發動，事必有濟；原神旺相，福壽綿長；原神休囚受剋，用神無援。」",
+    summary: yuanShenSummary,
+  };
+
+  // 5. 忌神 (Ji Shen)
+  const jiShenCategory = RELATIVE_RESTRICTOR[yongShenCategory];
+  const chouShenCategory = CHOU_SHEN_MAP[yongShenCategory];
+  const jiShenLines = lines.filter((l) => l.originalRelative === jiShenCategory);
+  const movingJiLines = jiShenLines.filter((l) => l.isMoving);
+
+  let jiShenStatus: Layer5JiShenAnalysis["status"] = "休囚受制（無害）";
+  let jiThreat: Layer5JiShenAnalysis["threatLevel"] = "無威脅";
+  let jiSummary = "";
+
+  if (jiShenLines.length === 0) {
+    jiShenStatus = "不上卦安靜";
+    jiThreat = "無威脅";
+    jiSummary = `卦中無【${jiShenCategory}】（忌神不上卦），用神不受內在威脅，阻力微小。`;
+  } else if (movingJiLines.some((l) => l.dongBianDetail?.type === "回頭剋" || l.dongBianDetail?.type === "化退神")) {
+    jiShenStatus = "化退回頭剋（轉危為安）";
+    jiThreat = "微弱";
+    jiSummary = `忌神【${jiShenCategory}】雖發動，但化回頭剋或化退神，自顧不暇、難以傷用，轉危為安。`;
+  } else if (movingJiLines.length > 0) {
+    jiShenStatus = "發動傷用（大凶）";
+    jiThreat = "極高";
+    jiSummary = `忌神【${jiShenCategory}】發動直剋用神！如猛虎下山、橫生阻礙，主謀事受損受挫，需防小人災咎。`;
+  } else if (jiShenLines.some((l) => l.wangXiang === "旺" || l.wangXiang === "相")) {
+    jiShenStatus = "旺相暗伏";
+    jiThreat = "中等";
+    jiSummary = `忌神【${jiShenCategory}】旺相安靜，暗藏威脅，如伏虎待時，逢日沖沖起或值日時仍需防範。`;
+  } else {
+    jiShenStatus = "休囚受制（無害）";
+    jiThreat = "微弱";
+    jiSummary = `忌神【${jiShenCategory}】休囚受制無氣，如拔牙之虎，不足為慮。`;
+  }
+
+  const layer5JiShen: Layer5JiShenAnalysis = {
+    category: jiShenCategory,
+    wuxing: jiShenLines[0]?.originalWuxing || "金",
+    chouShenCategory,
+    existInOriginal: jiShenLines.length > 0,
+    lineIndices: jiShenLines.map((l) => l.index),
+    movingIndices: movingJiLines.map((l) => l.index),
+    details: jiShenLines.map((l) => ({
+      lineIndex: l.index,
+      name: l.name,
+      branch: l.originalBranch,
+      wuxing: l.originalWuxing,
+      sixSpirit: l.sixSpirit,
+      wangXiang: l.wangXiang,
+      isMoving: l.isMoving,
+      isMonthPo: l.isMonthPo,
+      isXunKong: l.isXunKong,
+      effectDesc: l.isMoving
+        ? `動爻發動剋用神，${l.dongBianDetail?.summary || "發動剋用"}`
+        : `靜爻，${l.wangXiangDescription}`,
+    })),
+    status: jiShenStatus,
+    classicalQuote: "《增刪卜易·忌神章》曰：「忌神發動，剋害無休；忌神化退化絕，雖凶不凶；忌神無氣，如斬草除根。」",
+    threatLevel: jiThreat,
+    summary: jiSummary,
+  };
+
+  // 6. 伏神 (Fu Shen)
+  const allFushen = lines.map((l) => l.fushen).filter((f): f is FushenInfo => Boolean(f));
+  const yongShenFu = allFushen.find((f) => f.relative === yongShenCategory);
+  const pureHexName = allFushen[0]?.pureHexagramName || `${originalHexagram.palace}為宮純卦`;
+
+  const layer6FuShen: Layer6FuShenAnalysis = {
+    fushenList: allFushen,
+    yongShenFuShen: yongShenFu,
+    missingRelatives,
+    pureHexagramName: pureHexName,
+    classicalQuote: "《黃金策》曰：「伏無提攜不能起，飛無遮蔽自現前。飛生伏得長生，伏剋飛為出暴。」",
+    summary: isMissingInOriginal
+      ? `本卦所缺【${missingRelatives.join("、")}】。用神【${yongShenCategory}】伏於本宮【${pureHexName}】第${yongShenFu?.lineIndex}爻，${yongShenFu?.emergedReason}。`
+      : `本卦用神上卦，六親基本具足（缺：${missingRelatives.length ? missingRelatives.join("、") : "無缺失"}）。伏神作為底層暗線參考。`,
+  };
+
+  // 7. 飛神 (Fei Shen)
+  const feiShenList = lines.map((l) => {
+    const fu = l.fushen;
+    return {
+      lineIndex: l.index,
+      lineName: l.name,
+      feiRelative: l.originalRelative,
+      feiBranch: l.originalBranch,
+      feiWuxing: l.originalWuxing,
+      fuRelative: fu?.relative || "兄弟",
+      fuBranch: fu?.branch || "子",
+      fuWuxing: fu?.wuxing || "水",
+      relation: fu?.relationWithFeishen || "比和",
+      isFeiKong: l.isXunKong,
+      isFeiPo: l.isMonthPo,
+      isFeiMoving: l.isMoving,
+      impactOnFu: l.isXunKong
+        ? "飛神逢旬空，遮擋撤除，伏神最易透出！"
+        : l.isMonthPo
+        ? "飛神逢月破，遮障瓦解，伏神得出！"
+        : l.isMoving
+        ? "飛神發動，氣場激盪，牽引伏神動態。"
+        : fu?.relationDesc || "飛神安靜壓覆伏神。",
+    };
+  });
+
+  const layer7FeiShen: Layer7FeiShenAnalysis = {
+    feiShenList,
+    classicalQuote: "《卜筮正宗》曰：「飛神空破，伏神易出；飛神相生，伏得滋養；飛神剋伏，受制難展。」",
+    summary: "飛神為顯露於卦面之現狀，壓於伏神之上。若飛神逢空、逢破、逢沖，則伏神易脫困透出成事。",
+  };
+
+  // 8. 月建 (Yue Jian)
+  const wangDist: Layer8YueJianAnalysis["wangDistribution"] = {
+    旺: [],
+    相: [],
+    休: [],
+    囚: [],
+    死: [],
+  };
+  const monthPoLines: Layer8YueJianAnalysis["monthPoLines"] = [];
+
+  lines.forEach((l) => {
+    wangDist[l.wangXiang].push(`${l.name}(${l.originalRelative}${l.originalBranch})`);
+    if (l.isMonthPo) {
+      monthPoLines.push({
+        lineIndex: l.index,
+        name: l.name,
+        relative: l.originalRelative,
+        branch: l.originalBranch,
+        desc: l.monthPoDescription || "逢月令正沖為月破，萬物無氣受損。",
+      });
+    }
+  });
+
+  const layer8YueJian: Layer8YueJianAnalysis = {
+    yueJian: ganzhi.yueJian,
+    yueJianWuxing: ganzhi.yueJianWuxing,
+    ganzhiMonth: ganzhi.ganzhiMonth,
+    wangDistribution: wangDist,
+    monthPoLines,
+    classicalQuote: "《增刪卜易》曰：「月建司三旬之權，操萬卦之提綱。旺相者福盛，休囚者力薄；逢沖者為月破，出月方實。」",
+    summary: `當前值【${ganzhi.ganzhiMonth}】月令，${ganzhi.yueJianWuxing}旺。月破之爻：${
+      monthPoLines.length ? monthPoLines.map((m) => `${m.name}（${m.branch}）`).join("、") : "全卦無月破，根基穩固"
+    }。`,
+  };
+
+  // 9. 日辰 (Ri Chen)
+  const riHeLines: Layer9RiChenAnalysis["riHeLines"] = [];
+  const anDongLines: Layer9RiChenAnalysis["anDongLines"] = [];
+  const riPoLines: Layer9RiChenAnalysis["riPoLines"] = [];
+  const riChongDongLines: Layer9RiChenAnalysis["riChongDongLines"] = [];
+  const chongKongLines: Layer9RiChenAnalysis["chongKongLines"] = [];
+
+  lines.forEach((l) => {
+    if (l.dayRelation === "日辰六合") {
+      riHeLines.push({ lineIndex: l.index, name: l.name, branch: l.originalBranch, desc: l.dayRelationDescription });
+    }
+    if (l.dayChongType === "暗動") {
+      anDongLines.push({ lineIndex: l.index, name: l.name, branch: l.originalBranch, desc: l.dayChongDescription || "暗中發力成事" });
+    }
+    if (l.dayChongType === "日破") {
+      riPoLines.push({ lineIndex: l.index, name: l.name, branch: l.originalBranch, desc: l.dayChongDescription || "休囚遭沖破散" });
+    }
+    if (l.dayChongType === "日沖動") {
+      riChongDongLines.push({ lineIndex: l.index, name: l.name, branch: l.originalBranch, desc: l.dayChongDescription || "動逢日沖事速發" });
+    }
+    if (l.dayChongType === "沖空") {
+      chongKongLines.push({ lineIndex: l.index, name: l.name, branch: l.originalBranch, desc: l.dayChongDescription || "沖空填實有用" });
+    }
+  });
+
+  const layer9RiChen: Layer9RiChenAnalysis = {
+    riChen: ganzhi.riChen,
+    riChenWuxing: ganzhi.riChenWuxing,
+    riGan: ganzhi.riGan,
+    ganzhiDay: ganzhi.ganzhiDay,
+    riHeLines,
+    anDongLines,
+    riPoLines,
+    riChongDongLines,
+    chongKongLines,
+    classicalQuote: "《黃金策》曰：「日辰主一日之生殺，操當下之機杼。生之則吉，剋之則凶；旺沖為暗動，衰沖為日破。」",
+    summary: `當前值【${ganzhi.ganzhiDay}】日辰，${ganzhi.riChenWuxing}當令。${
+      anDongLines.length ? `【暗動爻】：${anDongLines.map((a) => a.name).join("、")}（如伏兵突起）；` : ""
+    }${
+      riPoLines.length ? `【日破爻】：${riPoLines.map((p) => p.name).join("、")}（摧折無依）；` : ""
+    }${
+      riHeLines.length ? `【日合爻】：${riHeLines.map((h) => h.name).join("、")}（得日絆成全）；` : "全卦日辰生剋有序。"
+    }`,
+  };
+
+  // 10. 動爻 (Dong Yao)
+  const movingLines = lines.filter((l) => l.isMoving);
+  const layer10DongYao: Layer10DongYaoAnalysis = {
+    hasMoving: movingLines.length > 0,
+    movingLines: movingLines.map((l) => {
+      let impactOnYong = "動爻轉化生剋全盤";
+      let impactOnShi = "牽動世爻氣場";
+
+      if (WUXING_RELATIONS[l.originalWuxing].generates === layer3YongShen.wuxing) {
+        impactOnYong = "動爻五行生助用神，催化吉慶成事。";
+      } else if (WUXING_RELATIONS[l.originalWuxing].restricts === layer3YongShen.wuxing) {
+        impactOnYong = "動爻五行剋傷用神，事多阻力與衝擊。";
+      }
+
+      if (WUXING_RELATIONS[l.originalWuxing].generates === shiLine.originalWuxing) {
+        impactOnShi = "動爻生世爻，自身得利益或貴人助。";
+      } else if (WUXING_RELATIONS[l.originalWuxing].restricts === shiLine.originalWuxing) {
+        impactOnShi = "動爻剋世爻，自身承擔壓力與風險。";
+      }
+
+      return {
+        lineIndex: l.index,
+        name: l.name,
+        relative: l.originalRelative,
+        branch: l.originalBranch,
+        wuxing: l.originalWuxing,
+        sixSpirit: l.sixSpirit,
+        wangXiang: l.wangXiang,
+        dongBianDetail: l.dongBianDetail,
+        impactOnYong,
+        impactOnShi,
+      };
+    }),
+    classicalQuote: "《周易·繫辭》曰：「吉凶悔吝者，生乎動者也。神兆機於動，卦無動爻則事態安靜，動爻一發則乾坤變易。」",
+    summary:
+      movingLines.length === 0
+        ? "六爻安靜無動爻（靜卦），事態平穩隨常，專以日月建為生剋主軸。"
+        : `卦中共有 ${movingLines.length} 個動爻發動（${movingLines.map((m) => m.name).join("、")}），為事態變革轉折之關鍵樞紐。`,
+  };
+
+  // 11. 變爻 (Bian Yao)
+  const bianYaoList: Layer11BianYaoAnalysis["bianYaoList"] = [];
+  movingLines.forEach((l) => {
+    if (l.changedBranch && l.changedRelative && l.dongBianDetail) {
+      bianYaoList.push({
+        lineIndex: l.index,
+        origLineName: l.name,
+        origBranch: l.originalBranch,
+        changedLineName: l.changedLineName || "變爻",
+        changedBranch: l.changedBranch,
+        changedRelative: l.changedRelative,
+        dynamicsType: l.dongBianDetail.type,
+        dynamicsSummary: l.dongBianDetail.summary,
+        auspiciousness: l.dongBianDetail.auspiciousness,
+      });
+    }
+  });
+
+  const layer11BianYao: Layer11BianYaoAnalysis = {
+    changedHexagramName: changedHexagram?.name,
+    changedHexagramPalace: changedHexagram ? `${changedHexagram.palace}宮${changedHexagram.palaceTypeName}` : undefined,
+    bianYaoList,
+    changedGuaCi: changedHexagram?.guaCi,
+    classicalQuote: "《增刪卜易》曰：「本卦為事之始，變卦為事之終。動化回頭生、化進神者終成；動化回頭剋、化退神者終敗。」",
+    summary: changedHexagram
+      ? `動變化出【${changedHexagram.name}】（${changedHexagram.palace}宮）。${
+          bianYaoList.map((b) => `【${b.origLineName}】${b.dynamicsSummary}`).join("；")
+        }`
+      : "本卦無動變，事態以本卦大象與日月生剋為終局。",
+  };
+
+  // 12. 合沖刑害 (He Chong Xing Hai)
+  const sixHeList: Layer12HeChongXingHaiAnalysis["sixHeList"] = [];
+  const sixChongList: Layer12HeChongXingHaiAnalysis["sixChongList"] = [];
+  const sanHeJuList: Layer12HeChongXingHaiAnalysis["sanHeJuList"] = [];
+  const sanXingList: Layer12HeChongXingHaiAnalysis["sanXingList"] = [];
+  const liuHaiList: Layer12HeChongXingHaiAnalysis["liuHaiList"] = [];
+
+  // Pairwise lines scan for Liu He & Liu Chong
+  for (let i = 0; i < lines.length; i++) {
+    for (let j = i + 1; j < lines.length; j++) {
+      const b1 = lines[i].originalBranch;
+      const b2 = lines[j].originalBranch;
+      if (BRANCH_HE[b1] === b2) {
+        sixHeList.push({
+          type: "爻爻相合",
+          pair: `${lines[i].name}(${b1}) 與 ${lines[j].name}(${b2})`,
+          desc: `地支【${b1}${b2}六合】，主二爻情投意合、事相牽連相助。`,
+        });
+      }
+      if (BRANCH_CHONG[b1] === b2) {
+        sixChongList.push({
+          type: "爻爻相沖",
+          pair: `${lines[i].name}(${b1}) 與 ${lines[j].name}(${b2})`,
+          desc: `地支【${b1}${b2}相沖】，主二爻互不相讓、事有衝撞反覆。`,
+        });
+      }
+    }
+  }
+
+  // Month & Day He/Chong
+  lines.forEach((l) => {
+    if (BRANCH_HE[ganzhi.riChen] === l.originalBranch) {
+      sixHeList.push({
+        type: "爻日六合",
+        pair: `${l.name}(${l.originalBranch}) 與 日辰(${ganzhi.riChen})`,
+        desc: `得日辰六合絆住，吉事添喜、凶事難解。`,
+      });
+    }
+    if (BRANCH_HE[ganzhi.yueJian] === l.originalBranch) {
+      sixHeList.push({
+        type: "爻月六合",
+        pair: `${l.name}(${l.originalBranch}) 與 月建(${ganzhi.yueJian})`,
+        desc: `得月建六合，得天時提攜合旺。`,
+      });
+    }
+    if (l.isMonthPo) {
+      sixChongList.push({
+        type: "爻月相沖(月破)",
+        pair: `${l.name}(${l.originalBranch}) 與 月建(${ganzhi.yueJian})`,
+        desc: `逢月令正沖為月破，衰絕受損。`,
+      });
+    }
+    if (l.isDayChong) {
+      sixChongList.push({
+        type: "爻日相沖",
+        pair: `${l.name}(${l.originalBranch}) 與 日辰(${ganzhi.riChen})`,
+        desc: `逢日辰相沖（${l.dayChongType || "日沖"}）。`,
+      });
+    }
+  });
+
+  // San He Ju scan
+  const allBranchesInHex = lines.map((l) => l.originalBranch);
+  const SAN_HE_CONFIGS: Array<{ name: string; branches: [EarthlyBranch, EarthlyBranch, EarthlyBranch]; targetWuxing: Wuxing }> = [
+    { name: "申子辰三合水局", branches: ["申", "子", "辰"], targetWuxing: "水" },
+    { name: "亥卯未三合木局", branches: ["亥", "卯", "未"], targetWuxing: "木" },
+    { name: "寅午戌三合火局", branches: ["寅", "午", "戌"], targetWuxing: "火" },
+    { name: "巳酉丑三合金局", branches: ["巳", "酉", "丑"], targetWuxing: "金" },
+  ];
+
+  SAN_HE_CONFIGS.forEach((cfg) => {
+    const present = cfg.branches.filter((b) => allBranchesInHex.includes(b) || b === ganzhi.riChen || b === ganzhi.yueJian);
+    if (present.length >= 2) {
+      const isComplete = present.length === 3;
+      sanHeJuList.push({
+        name: cfg.name + (isComplete ? "（局成）" : "（半合局）"),
+        branches: present,
+        targetWuxing: cfg.targetWuxing,
+        linesInvolved: present.join("、"),
+        effect: isComplete
+          ? `三合金局圓滿，聚眾合力，大幅加強【${cfg.targetWuxing}】五行氣勢！`
+          : `得【${present.join("、")}】半合${cfg.targetWuxing}局，有聚力成事之意。`,
+      });
+    }
+  });
+
+  // San Xing scan
+  const branchesSet = new Set(allBranchesInHex);
+  if (branchesSet.has("寅") && branchesSet.has("巳") && branchesSet.has("申")) {
+    sanXingList.push({
+      type: "恃勢之刑",
+      pair: "寅、巳、申俱備",
+      desc: "犯恃勢之刑。主依仗權勢爭端、官非是非、防暗箭相傷。",
+    });
+  }
+  if (branchesSet.has("丑") && branchesSet.has("戌") && branchesSet.has("未")) {
+    sanXingList.push({
+      type: "無恩之刑",
+      pair: "丑、戌、未俱備",
+      desc: "犯無恩之刑。主恩將仇報、骨肉朋友反目、小人相爭。",
+    });
+  }
+  if (branchesSet.has("子") && branchesSet.has("卯")) {
+    sanXingList.push({
+      type: "無禮之刑",
+      pair: "子、卯相見",
+      desc: "犯無禮之刑。主禮法不周、風流男女糾紛、名譽受損。",
+    });
+  }
+
+  // Liu Hai scan
+  const LIU_HAI_PAIRS: Record<EarthlyBranch, EarthlyBranch> = {
+    子: "未", 未: "子",
+    丑: "午", 午: "丑",
+    寅: "巳", 巳: "寅",
+    卯: "辰", 辰: "卯",
+    申: "亥", 亥: "申",
+    酉: "戌", 戌: "酉",
+  };
+
+  for (let i = 0; i < lines.length; i++) {
+    for (let j = i + 1; j < lines.length; j++) {
+      const b1 = lines[i].originalBranch;
+      const b2 = lines[j].originalBranch;
+      if (LIU_HAI_PAIRS[b1] === b2) {
+        liuHaiList.push({
+          pair: `${lines[i].name}(${b1}) 與 ${lines[j].name}(${b2})`,
+          desc: `犯六害相穿（${b1}${b2}相害），主暗中妨害、嫉妒阻隔、不易防備。`,
+        });
+      }
+    }
+  }
+
+  const layer12HeChongXingHai: Layer12HeChongXingHaiAnalysis = {
+    sixHeList,
+    sixChongList,
+    sanHeJuList,
+    sanXingList,
+    liuHaiList,
+    classicalQuote: "《卜筮正宗》曰：「合者事之所聚，沖者事之所散；刑者防傷防訟，害者暗箭相穿。神機全在合沖刑害之間。」",
+    summary: `全卦神機：六合 ${sixHeList.length} 組、六沖 ${sixChongList.length} 組、三合局 ${
+      sanHeJuList.length ? sanHeJuList[0].name : "無"
+    }、相刑 ${sanXingList.length ? sanXingList[0].type : "無"}、相害 ${liuHaiList.length} 處。`,
+  };
+
+  // 13. 旬空 (Xun Kong)
+  const xunName = getXunNameFromBranches(ganzhi.xunKong);
+  const kongLines = lines
+    .filter((l) => l.isXunKong)
+    .map((l) => {
+      const isTrueKong = l.wangXiang === "死" && !l.isMoving && l.dayRelation !== "得日辰生" && l.dayRelation !== "臨日辰";
+      let kongTypeDesc = "假空（動不為空、旺相不為空）";
+      if (isTrueKong) {
+        kongTypeDesc = "真空（休囚無氣、靜無生扶，到底為空）";
+      } else if (l.dayChongType === "沖空") {
+        kongTypeDesc = "沖空（逢日辰相沖，沖空則實有用）";
+      } else if (l.isMoving) {
+        kongTypeDesc = "動空（動不為空，事後必應）";
+      } else if (l.wangXiang === "旺" || l.wangXiang === "相") {
+        kongTypeDesc = "旺相空（得時得令，過旬出空即發）";
+      }
+
+      return {
+        lineIndex: l.index,
+        name: l.name,
+        relative: l.originalRelative,
+        branch: l.originalBranch,
+        isTrueKong,
+        kongTypeDesc,
+        outKongDate: `出旬填實之【${l.originalBranch}】日/月，或逢沖【${BRANCH_CHONG[l.originalBranch]}】之日`,
+      };
+    });
+
+  const layer13XunKong: Layer13XunKongAnalysis = {
+    xunKongBranches: ganzhi.xunKong,
+    xunName,
+    kongLines,
+    classicalQuote: "《增刪卜易·旬空章》曰：「旺不為空，動不為空，有日辰生扶者不為空。惟休囚無氣受剋者為真空，真空到底無成也。」",
+    summary:
+      kongLines.length === 0
+        ? `當前值【${xunName}】，六爻皆無落空，事態實在無欺、進展真確。`
+        : `落空爻位：${kongLines.map((k) => `${k.name}（${k.branch}空亡·${k.kongTypeDesc}）`).join("、")}。`,
+  };
+
+  // 14. 應期 (Ying Qi)
+  const rulesApplied: Layer14YingQiAnalysis["rulesApplied"] = [];
+  const targetBranch = layer3YongShen.branch || "子";
+
+  if (layer3YongShen.isXunKong) {
+    rulesApplied.push({
+      condition: `用神逢旬空【${targetBranch}】`,
+      prediction: `出旬值【${targetBranch}】日/月，或逢沖【${BRANCH_CHONG[targetBranch]}】之日時應事。`,
+      classicalSource: "《增刪卜易》：用神旬空，出空填實之日應事；或逢沖空之日應事。",
+    });
+  } else if (layer3YongShen.isMonthPo) {
+    rulesApplied.push({
+      condition: `用神逢月破【${targetBranch}】`,
+      prediction: `出月交節後，或逢合【${BRANCH_HE[targetBranch]}】、值日【${targetBranch}】填實之日時應事。`,
+      classicalSource: "《卜筮正宗》：用神月破，出月填實或逢合之日應事。",
+    });
+  } else if (layer3YongShen.isMoving) {
+    rulesApplied.push({
+      condition: `用神發動【${targetBranch}】`,
+      prediction: `用神逢值【${targetBranch}】日，或逢六合【${BRANCH_HE[targetBranch]}】之日應事。`,
+      classicalSource: "《增刪卜易》：動而逢值逢合為應期。",
+    });
+  } else {
+    rulesApplied.push({
+      condition: `用神安靜【${targetBranch}】旺相`,
+      prediction: `逢沖【${BRANCH_CHONG[targetBranch]}】沖動之日，或逢值【${targetBranch}】之日時應事。`,
+      classicalSource: "《增刪卜易》：靜而逢值逢沖為應期。",
+    });
+  }
+
+  // Check Yuan Shen moving rule
+  if (layer4YuanShen.movingIndices.length > 0) {
+    const yuanBranch = layer4YuanShen.details[0]?.branch || "寅";
+    rulesApplied.push({
+      condition: `原神【${layer4YuanShen.category}】發動`,
+      prediction: `原神逢值【${yuanBranch}】日或生用神之期吉慶發作。`,
+      classicalSource: "《黃金策》：原神發動，待原神逢值逢合之日應吉。",
+    });
+  }
+
+  // Check Fu Shen emerged rule
+  if (isMissingInOriginal && fuShenInfo) {
+    rulesApplied.push({
+      condition: `用神伏藏【${fuShenInfo.branch}】`,
+      prediction: `伏神透出之【${fuShenInfo.branch}】日，或沖去飛神之日應事。`,
+      classicalSource: "《卜筮正宗》：伏神透出或沖飛之期為應期。",
+    });
+  }
+
+  const primaryYingQi = rulesApplied[0]?.prediction || `值【${targetBranch}】日或逢合【${BRANCH_HE[targetBranch]}】日應驗。`;
+
+  const layer14YingQi: Layer14YingQiAnalysis = {
+    primaryYingQi,
+    rulesApplied,
+    timeUnitEstimates: {
+      dayTerm: primaryYingQi,
+      monthTerm: `逢【${targetBranch}】月或【${BRANCH_HE[targetBranch]}】月建令`,
+      hourTerm: `逢【${targetBranch}】時或【${BRANCH_HE[targetBranch]}】時辰觸發`,
+    },
+    summary: `斷應期核心推演：${rulesApplied.map((r) => r.condition + " → " + r.prediction).join("；")}`,
+  };
+
+  return {
+    layer1Shi,
+    layer2Ying,
+    layer3YongShen,
+    layer4YuanShen,
+    layer5JiShen,
+    layer6FuShen,
+    layer7FeiShen,
+    layer8YueJian,
+    layer9RiChen,
+    layer10DongYao,
+    layer11BianYao,
+    layer12HeChongXingHai,
+    layer13XunKong,
+    layer14YingQi,
+  };
+};
+
 // Main function: Calculate complete Liu Yao Divination result
 export const calculateLiuYaoDivination = (
   querent: string,
@@ -700,10 +1622,8 @@ export const calculateLiuYaoDivination = (
     const symbolStr = yinYang === 1 ? "▅▅▅▅▅" : "▅▅　▅▅";
     const movingMark = rem === 9 ? "◯ (老陽發動)" : rem === 6 ? "✕ (老陰發動)" : "";
 
-    // Yao line name (e.g. 初九, 初六, 六二, 九二...)
-    const yaoPositionName = ["初", "二", "三", "四", "五", "上"][i];
-    const yaoTypeName = yinYang === 1 ? "九" : "六";
-    const lineName = `${yaoPositionName}${yaoTypeName}`;
+    // Standard Yao line name (e.g. 初九, 初六, 九二, 六二, 九三, 六三...)
+    const lineName = getYaoLineName(lineIndex, yinYang);
 
     const origStem = origNajia.stems[i];
     const origBranch = origNajia.branches[i];
@@ -737,8 +1657,9 @@ export const calculateLiuYaoDivination = (
     statusTags.push(`月令${wangXiang}`);
     if (isMonthPo) statusTags.push("月破");
     if (isXunKong) statusTags.push("旬空");
+    if (dayRelation === "臨日辰") statusTags.push("臨日辰");
     if (dayRelation === "日辰六合") statusTags.push("日合");
-    if (dayRelation === "日建同旺") statusTags.push("臨日辰");
+    if (dayRelation === "日建同旺") statusTags.push("日辰比和");
     if (dayRelation === "得日辰生") statusTags.push("日辰生");
     if (dayRelation === "受日辰剋") statusTags.push("日辰剋");
     if (dayChongType) statusTags.push(dayChongType);
@@ -767,7 +1688,7 @@ export const calculateLiuYaoDivination = (
       changedRelative = getSixRelative(originalHexagram.palaceWuxing, changedWuxing);
       isChangedShi = changedHexagram.shiYao === lineIndex;
       isChangedYing = changedHexagram.yingYao === lineIndex;
-      changedLineName = `${yaoPositionName}${changedYinYang === 1 ? "九" : "六"}`;
+      changedLineName = getYaoLineName(lineIndex, changedYinYang);
       changedYaoCi = changedHexagram.yaoCi[i];
 
       if (isMoving) {
@@ -803,37 +1724,15 @@ export const calculateLiuYaoDivination = (
       relationDesc = "飛神剋伏神，名為受制，受飛神壓迫，凶困難出";
     }
 
-    // Check if Fushen is emerged (出伏/透出條件)
-    const fushenWang = BRANCH_WUXING[pureBranch] === ganzhi.yueJianWuxing || 
-      WUXING_RELATIONS[ganzhi.yueJianWuxing].generates === BRANCH_WUXING[pureBranch] ||
-      BRANCH_WUXING[pureBranch] === ganzhi.riChenWuxing ||
-      WUXING_RELATIONS[ganzhi.riChenWuxing].generates === BRANCH_WUXING[pureBranch];
-    
-    const feishenClashed = BRANCH_CHONG[ganzhi.riChen] === origBranch || BRANCH_CHONG[ganzhi.yueJian] === origBranch;
-    const feishenKong = ganzhi.xunKong.includes(origBranch);
-
-    let isEmerged = false;
-    let emergedReason = "";
-
-    if (relationWithFeishen === "飛生伏") {
-      isEmerged = true;
-      emergedReason = "得飛神相生，易透出";
-    } else if (fushenWang) {
-      isEmerged = true;
-      emergedReason = "得日月旺相生扶，伏而有力";
-    } else if (feishenClashed) {
-      isEmerged = true;
-      emergedReason = "飛神逢日/月沖動，伏神乘機透出";
-    } else if (feishenKong) {
-      isEmerged = true;
-      emergedReason = "飛神落空，遮擋已除，伏神得出";
-    } else if (relationWithFeishen === "伏剋飛") {
-      isEmerged = true;
-      emergedReason = "伏剋飛神為出暴，有破土之勢";
-    } else {
-      isEmerged = false;
-      emergedReason = "伏藏受制或無力，須待逢沖值日方得出";
-    }
+    // Check if Fushen is emerged (出伏/透出條件與精確生剋說明)
+    const { isEmerged, emergedReason } = analyzeFushenStatus(
+      pureBranch,
+      pureWuxing,
+      origBranch,
+      origWuxing,
+      relationWithFeishen,
+      ganzhi
+    );
 
     const isMissingInOriginal = missingRelatives.includes(pureRel);
 
@@ -910,6 +1809,16 @@ export const calculateLiuYaoDivination = (
     overallAuspiciousness = "事歸本位 · 宜定心守成";
   }
 
+  // 14-Layer Classical Liu Yao Analytical Hierarchy
+  const layeredAnalysis = calculateLiuYaoLayeredAnalysis(
+    lines,
+    ganzhi,
+    originalHexagram,
+    changedHexagram,
+    yongShenCategory,
+    missingRelatives
+  );
+
   return {
     id: `div_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
     querent,
@@ -943,5 +1852,6 @@ export const calculateLiuYaoDivination = (
     sixHeSixChong,
     changedSixHeSixChong,
     createdAt: Date.now(),
+    layeredAnalysis,
   };
 };

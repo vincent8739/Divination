@@ -124,8 +124,8 @@ export interface YaoLineDetail {
   dayChongType?: "暗動" | "日破" | "日沖動" | "沖空";
   dayChongDescription?: string;
 
-  // 日辰關係 (日建同旺、得日生、受日剋、生助日辰、日合、日平)
-  dayRelation: "日建同旺" | "得日辰生" | "受日辰剋" | "生助日辰" | "日辰六合" | "日平";
+  // 日辰關係 (臨日辰、日建同旺、得日生、受日剋、生助日辰、日合、日平)
+  dayRelation: "臨日辰" | "日建同旺" | "得日辰生" | "受日辰剋" | "生助日辰" | "日辰六合" | "日平";
   dayRelationDescription: string;
 
   // 旬空
@@ -191,6 +191,281 @@ export interface DivinationResult {
   changedSixHeSixChong?: string; // 變卦之六合、六沖、遊魂、歸魂
   aiInterpretation?: string;
   createdAt: number;
+
+  // Traditional 14-Layer Analytical Hierarchy
+  layeredAnalysis?: LiuYaoLayeredAnalysis;
+}
+
+// ----------------------------------------------------
+// 傳統六爻 14 層逐層推演全鑑型別系統
+// ----------------------------------------------------
+
+export interface Layer1ShiAnalysis {
+  lineIndex: number;
+  name: string;
+  relative: SixRelative;
+  stem: HeavenlyStem;
+  branch: EarthlyBranch;
+  wuxing: Wuxing;
+  sixSpirit: SixSpirit;
+  wangXiang: WangXiangLevel;
+  dayRelation: string;
+  isMoving: boolean;
+  isMonthPo: boolean;
+  isDayChong: boolean;
+  isXunKong: boolean;
+  dongBianSummary?: string;
+  meaning: string;
+  classicalQuote: string;
+  evaluation: string;
+}
+
+export interface Layer2YingAnalysis {
+  lineIndex: number;
+  name: string;
+  relative: SixRelative;
+  stem: HeavenlyStem;
+  branch: EarthlyBranch;
+  wuxing: Wuxing;
+  sixSpirit: SixSpirit;
+  wangXiang: WangXiangLevel;
+  relationWithShi: "應生世" | "應剋世" | "世生應" | "世剋應" | "世應比和" | "世應相合" | "世應相沖";
+  relationWithShiDesc: string;
+  meaning: string;
+  classicalQuote: string;
+  evaluation: string;
+}
+
+export interface Layer3YongShenAnalysis {
+  category: SixRelative;
+  lineIndices: number[]; // 卦中出現該六親之爻位（可能多現）
+  primaryLineIndex: number; // 取定之主用神爻（如無則為伏神爻）
+  isMissingInOriginal: boolean; // 是否伏藏不上卦
+  fuShenInfo?: FushenInfo;
+  stem?: HeavenlyStem;
+  branch?: EarthlyBranch;
+  wuxing?: Wuxing;
+  sixSpirit?: SixSpirit;
+  wangXiang?: WangXiangLevel;
+  dayRelation?: string;
+  isMoving?: boolean;
+  isMonthPo?: boolean;
+  isDayChong?: boolean;
+  isXunKong?: boolean;
+  powerScore: number; // 0-100 力量評分
+  statusDescription: string;
+  classicalQuote: string;
+  selectionReason: string;
+  summary: string;
+}
+
+export interface Layer4YuanShenAnalysis {
+  category: SixRelative; // 生用神之六親
+  wuxing: Wuxing;
+  existInOriginal: boolean;
+  lineIndices: number[];
+  movingIndices: number[];
+  details: Array<{
+    lineIndex: number;
+    name: string;
+    branch: EarthlyBranch;
+    wuxing: Wuxing;
+    sixSpirit: SixSpirit;
+    wangXiang: WangXiangLevel;
+    isMoving: boolean;
+    isMonthPo: boolean;
+    isXunKong: boolean;
+    effectDesc: string;
+  }>;
+  status: "旺相發動生用" | "旺相安靜" | "休囚無力" | "受制逢破" | "伏藏不現" | "動化退剋";
+  classicalQuote: string;
+  summary: string;
+}
+
+export interface Layer5JiShenAnalysis {
+  category: SixRelative; // 剋用神之六親
+  wuxing: Wuxing;
+  chouShenCategory: SixRelative; // 仇神（生忌神剋原神）
+  existInOriginal: boolean;
+  lineIndices: number[];
+  movingIndices: number[];
+  details: Array<{
+    lineIndex: number;
+    name: string;
+    branch: EarthlyBranch;
+    wuxing: Wuxing;
+    sixSpirit: SixSpirit;
+    wangXiang: WangXiangLevel;
+    isMoving: boolean;
+    isMonthPo: boolean;
+    isXunKong: boolean;
+    effectDesc: string;
+  }>;
+  status: "發動傷用（大凶）" | "旺相暗伏" | "休囚受制（無害）" | "化退回頭剋（轉危為安）" | "不上卦安靜";
+  classicalQuote: string;
+  threatLevel: "極高" | "中等" | "微弱" | "無威脅";
+  summary: string;
+}
+
+export interface Layer6FuShenAnalysis {
+  fushenList: FushenInfo[];
+  yongShenFuShen?: FushenInfo;
+  missingRelatives: SixRelative[];
+  pureHexagramName: string;
+  classicalQuote: string;
+  summary: string;
+}
+
+export interface Layer7FeiShenAnalysis {
+  feiShenList: Array<{
+    lineIndex: number;
+    lineName: string;
+    feiRelative: SixRelative;
+    feiBranch: EarthlyBranch;
+    feiWuxing: Wuxing;
+    fuRelative: SixRelative;
+    fuBranch: EarthlyBranch;
+    fuWuxing: Wuxing;
+    relation: "伏生飛" | "飛生伏" | "伏剋飛" | "飛剋伏" | "比和";
+    isFeiKong: boolean;
+    isFeiPo: boolean;
+    isFeiMoving: boolean;
+    impactOnFu: string;
+  }>;
+  classicalQuote: string;
+  summary: string;
+}
+
+export interface Layer8YueJianAnalysis {
+  yueJian: EarthlyBranch;
+  yueJianWuxing: Wuxing;
+  ganzhiMonth: string;
+  wangDistribution: {
+    旺: string[];
+    相: string[];
+    休: string[];
+    囚: string[];
+    死: string[];
+  };
+  monthPoLines: Array<{
+    lineIndex: number;
+    name: string;
+    relative: SixRelative;
+    branch: EarthlyBranch;
+    desc: string;
+  }>;
+  classicalQuote: string;
+  summary: string;
+}
+
+export interface Layer9RiChenAnalysis {
+  riChen: EarthlyBranch;
+  riChenWuxing: Wuxing;
+  riGan: HeavenlyStem;
+  ganzhiDay: string;
+  riHeLines: Array<{ lineIndex: number; name: string; branch: EarthlyBranch; desc: string }>;
+  anDongLines: Array<{ lineIndex: number; name: string; branch: EarthlyBranch; desc: string }>;
+  riPoLines: Array<{ lineIndex: number; name: string; branch: EarthlyBranch; desc: string }>;
+  riChongDongLines: Array<{ lineIndex: number; name: string; branch: EarthlyBranch; desc: string }>;
+  chongKongLines: Array<{ lineIndex: number; name: string; branch: EarthlyBranch; desc: string }>;
+  classicalQuote: string;
+  summary: string;
+}
+
+export interface Layer10DongYaoAnalysis {
+  movingLines: Array<{
+    lineIndex: number;
+    name: string;
+    relative: SixRelative;
+    branch: EarthlyBranch;
+    wuxing: Wuxing;
+    sixSpirit: SixSpirit;
+    wangXiang: WangXiangLevel;
+    dongBianDetail?: DongBianDetail;
+    impactOnYong: string;
+    impactOnShi: string;
+  }>;
+  hasMoving: boolean;
+  classicalQuote: string;
+  summary: string;
+}
+
+export interface Layer11BianYaoAnalysis {
+  changedHexagramName?: string;
+  changedHexagramPalace?: string;
+  bianYaoList: Array<{
+    lineIndex: number;
+    origLineName: string;
+    origBranch: EarthlyBranch;
+    changedLineName: string;
+    changedBranch: EarthlyBranch;
+    changedRelative: SixRelative;
+    dynamicsType: string;
+    dynamicsSummary: string;
+    auspiciousness: string;
+  }>;
+  changedGuaCi?: string;
+  classicalQuote: string;
+  summary: string;
+}
+
+export interface Layer12HeChongXingHaiAnalysis {
+  sixHeList: Array<{ type: "爻爻相合" | "爻日六合" | "爻月六合"; pair: string; desc: string }>;
+  sixChongList: Array<{ type: "爻爻相沖" | "爻日相沖" | "爻月相沖(月破)"; pair: string; desc: string }>;
+  sanHeJuList: Array<{ name: string; branches: string[]; targetWuxing: Wuxing; linesInvolved: string; effect: string }>;
+  sanXingList: Array<{ type: "恃勢之刑" | "無恩之刑" | "無禮之刑" | "自刑"; pair: string; desc: string }>;
+  liuHaiList: Array<{ pair: string; desc: string }>;
+  classicalQuote: string;
+  summary: string;
+}
+
+export interface Layer13XunKongAnalysis {
+  xunKongBranches: string; // e.g. "戌亥"
+  xunName: string; // 甲子旬, 甲戌旬...
+  kongLines: Array<{
+    lineIndex: number;
+    name: string;
+    relative: SixRelative;
+    branch: EarthlyBranch;
+    isTrueKong: boolean; // 真空 vs 假空
+    kongTypeDesc: string; // 旺不為空、動不為空、受日沖沖空、休囚真空
+    outKongDate: string; // 出空應事之期
+  }>;
+  classicalQuote: string;
+  summary: string;
+}
+
+export interface Layer14YingQiAnalysis {
+  primaryYingQi: string; // 最核心應期結論
+  rulesApplied: Array<{
+    condition: string; // 條款依據（例：用神旬空待出旬、用神入墓待逢沖、原神發動待逢值）
+    prediction: string; // 具體應事時間
+    classicalSource: string; // 《增刪卜易·應期章》
+  }>;
+  timeUnitEstimates: {
+    yearTerm?: string;
+    monthTerm?: string;
+    dayTerm?: string;
+    hourTerm?: string;
+  };
+  summary: string;
+}
+
+export interface LiuYaoLayeredAnalysis {
+  layer1Shi: Layer1ShiAnalysis;
+  layer2Ying: Layer2YingAnalysis;
+  layer3YongShen: Layer3YongShenAnalysis;
+  layer4YuanShen: Layer4YuanShenAnalysis;
+  layer5JiShen: Layer5JiShenAnalysis;
+  layer6FuShen: Layer6FuShenAnalysis;
+  layer7FeiShen: Layer7FeiShenAnalysis;
+  layer8YueJian: Layer8YueJianAnalysis;
+  layer9RiChen: Layer9RiChenAnalysis;
+  layer10DongYao: Layer10DongYaoAnalysis;
+  layer11BianYao: Layer11BianYaoAnalysis;
+  layer12HeChongXingHai: Layer12HeChongXingHaiAnalysis;
+  layer13XunKong: Layer13XunKongAnalysis;
+  layer14YingQi: Layer14YingQiAnalysis;
 }
 
 export interface StalkChangeStep {

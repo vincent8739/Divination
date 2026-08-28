@@ -7,6 +7,8 @@ import {
   YaoLineDetail,
 } from "../types/liuyao";
 import { YaoEnergyChart } from "./YaoEnergyChart";
+import { YaoDetailModal } from "./YaoDetailModal";
+import { LiuYao14Layers } from "./LiuYao14Layers";
 import { toPng } from "html-to-image";
 import {
   Sparkles,
@@ -76,7 +78,16 @@ export const HexagramBoard: React.FC<HexagramBoardProps> = ({
 }) => {
   const [copied, setCopied] = useState(false);
   const [selectedLineIndex, setSelectedLineIndex] = useState<number | null>(null);
+  const [isYaoDetailModalOpen, setIsYaoDetailModalOpen] = useState(false);
+  const [activeYaoDetailIndex, setActiveYaoDetailIndex] = useState<number>(1);
   const [activeAnalysisTab, setActiveAnalysisTab] = useState<"biangua" | "dongbian" | "month" | "day" | "fushen">("biangua");
+
+  const handleOpenYaoDetail = (lineIndex: number, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    setActiveYaoDetailIndex(lineIndex);
+    setSelectedLineIndex(lineIndex);
+    setIsYaoDetailModalOpen(true);
+  };
 
   // Export States
   const [isExportMenuOpen, setIsExportMenuOpen] = useState(false);
@@ -788,6 +799,19 @@ ${
           </div>
         </div>
 
+        {/* Interactive Yao Details Tip Banner */}
+        <div className="flex items-center justify-between bg-gradient-to-r from-amber-100/90 via-amber-50 to-amber-100/70 px-4 sm:px-6 py-2.5 border-b border-amber-200 text-xs">
+          <div className="flex items-center gap-2 text-amber-950 font-medium">
+            <Sparkles className="h-4 w-4 text-amber-700 shrink-0" />
+            <span>
+              <strong>爻位深度推演：</strong>點擊表格任一爻位（或點擊「詳解」按鈕），可立即展開<strong>【納甲·六親·神煞·伏神·旺衰】</strong>全景精準易理彈窗！
+            </span>
+          </div>
+          <span className="hidden md:inline-block rounded-md bg-white/90 border border-amber-300 px-2 py-0.5 text-[11px] font-bold text-amber-900 shadow-2xs">
+            支援鍵盤 ← / → 切換爻位
+          </span>
+        </div>
+
         {/* Responsive Table Grid */}
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs sm:text-sm">
@@ -797,7 +821,7 @@ ${
                 <th className="py-3 px-3 sm:px-4 bg-amber-100/50 text-amber-900">
                   伏神考證（本宮純卦）
                 </th>
-                <th className="py-3 px-3 sm:px-4 text-center">爻次</th>
+                <th className="py-3 px-3 sm:px-4 text-center">爻次 / 詳解</th>
                 <th className="py-3 px-3 sm:px-4 font-bold text-stone-900">
                   本卦六親干支
                 </th>
@@ -838,8 +862,8 @@ ${
                   return (
                     <tr
                       key={line.index}
-                      onClick={() => setSelectedLineIndex(isSelected ? null : line.index)}
-                      className={`transition cursor-pointer ${
+                      onClick={() => handleOpenYaoDetail(line.index)}
+                      className={`transition cursor-pointer group ${
                         isSelected
                           ? "bg-amber-100/70 ring-1 ring-amber-500"
                           : isYong
@@ -867,7 +891,7 @@ ${
                             <div className="flex items-center gap-1.5">
                               <span
                                 className={`font-semibold ${
-                                  fushen.isMissingInOriginal
+                                   fushen.isMissingInOriginal
                                     ? "text-rose-700 font-bold"
                                     : "text-stone-600"
                                 }`}
@@ -910,9 +934,19 @@ ${
                         )}
                       </td>
 
-                      {/* 3. Yao Index & Name */}
+                      {/* 3. Yao Index & Name with Detail Trigger Button */}
                       <td className="py-3 px-3 sm:px-4 text-center whitespace-nowrap font-serif font-bold text-stone-800">
-                        {line.name}
+                        <div className="flex items-center justify-center gap-1.5">
+                          <span className="group-hover:text-amber-900 transition">{line.name}</span>
+                          <button
+                            onClick={(e) => handleOpenYaoDetail(line.index, e)}
+                            className="inline-flex items-center gap-0.5 rounded bg-amber-100/90 group-hover:bg-amber-200 border border-amber-300 px-1.5 py-0.5 text-[10px] font-sans text-amber-900 transition cursor-pointer shadow-2xs"
+                            title={`點擊查看【${line.name}】納甲、神煞、伏神與旺衰推算彈窗`}
+                          >
+                            <Sparkles className="h-2.5 w-2.5 text-amber-700" />
+                            詳解
+                          </button>
+                        </div>
                       </td>
 
                       {/* 4. Primary Hexagram Relative, Stem, Branch, Wuxing */}
@@ -1031,6 +1065,12 @@ ${
                             </span>
                           )}
 
+                          {line.dayRelation === "臨日辰" && (
+                            <span className="rounded border border-emerald-300 bg-emerald-100 px-1.5 py-0.2 text-[11px] font-bold text-emerald-900 shadow-2xs">
+                              臨日辰
+                            </span>
+                          )}
+
                           {line.dayRelation === "日辰六合" && (
                             <span className="rounded border border-teal-200 bg-teal-50 px-1.5 py-0.2 text-[11px] font-medium text-teal-800">
                               日合
@@ -1039,7 +1079,7 @@ ${
 
                           {line.dayRelation === "日建同旺" && (
                             <span className="rounded border border-emerald-200 bg-emerald-50 px-1.5 py-0.2 text-[11px] font-medium text-emerald-800">
-                              臨日辰
+                              日辰比和
                             </span>
                           )}
 
@@ -1189,12 +1229,20 @@ ${
                     {l.originalRelative === result.yongShenCategory && (
                       <span className="rounded bg-amber-200 border border-amber-400 px-1.5 text-xs text-amber-900 font-bold">當前用神</span>
                     )}
+                    <button
+                      onClick={() => handleOpenYaoDetail(l.index)}
+                      className="ml-2 flex items-center gap-1.5 rounded-lg bg-amber-800 hover:bg-amber-900 text-white px-2.5 py-1 text-xs font-bold transition cursor-pointer shadow-2xs"
+                      title="開啟全鑑彈窗查看納甲、六親、神煞、伏神及旺衰推算"
+                    >
+                      <Sparkles className="h-3.5 w-3.5" />
+                      開啟【{l.name}】全景易理推演彈窗
+                    </button>
                   </div>
                   <button
                     onClick={() => setSelectedLineIndex(null)}
                     className="text-xs text-stone-500 hover:text-stone-800 cursor-pointer font-medium"
                   >
-                    關閉詳解 ✕
+                    關閉卡片 ✕
                   </button>
                 </div>
 
@@ -1241,6 +1289,13 @@ ${
           })()}
         </div>
       )}
+
+      {/* Traditional 14-Layer Classical Liu Yao Analytical Hierarchy */}
+      <LiuYao14Layers
+        result={result}
+        onSelectLine={(idx) => setSelectedLineIndex(idx)}
+        onOpenLineDetail={(idx) => handleOpenYaoDetail(idx)}
+      />
 
       {/* 2. Dedicated Metaphysics Analysis Deck: 月建、日辰、動變生剋（回頭生/剋、化進/退） */}
       <div className="rounded-2xl border border-stone-200 bg-white p-5 shadow-md sm:p-6 space-y-4">
@@ -1864,6 +1919,14 @@ ${
           )}
         </div>
       </div>
+
+      {/* 4. Full Yao Line In-depth Reasoning Modal */}
+      <YaoDetailModal
+        isOpen={isYaoDetailModalOpen}
+        onClose={() => setIsYaoDetailModalOpen(false)}
+        result={result}
+        initialLineIndex={activeYaoDetailIndex}
+      />
     </div>
   );
 };
